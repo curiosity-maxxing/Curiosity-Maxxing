@@ -4,248 +4,250 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>curiosity maxxing</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Lora:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--brand:#60992d;--bg:#f7f9f2;--card:#fff;--ink:#1f2a14;--on:#fff;--radius:16px;--font:'Nunito',sans-serif}
+:root{--brand:#fff;--bg:#0a0a0b;--card:#131315;--ink:#ececec;--on:#111;--radius:4px;--font:'Inter',sans-serif}
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;
- --muted:color-mix(in srgb,var(--ink) 55%,var(--bg));--line:color-mix(in srgb,var(--ink) 12%,var(--card));--soft:color-mix(in srgb,var(--brand) 10%,var(--card))}
-h1,h2,h3{font-family:var(--font);font-weight:700;margin:0;line-height:1.2}
+ --muted:color-mix(in srgb,var(--ink) 55%,var(--bg));--line:color-mix(in srgb,var(--ink) 16%,var(--card));--soft:color-mix(in srgb,var(--brand) 9%,var(--card))}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.02em;line-height:1.2}
 button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}
-:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .wrap{max-width:1020px;margin:0 auto;padding:16px 18px 80px}
-.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0 20px}
-.logo{font-size:1.4rem;font-weight:700;margin-right:auto;display:flex;gap:8px;align-items:center}
-.logo i{font-style:normal;display:grid;place-items:center;width:34px;height:34px;border-radius:calc(var(--radius)*.6);background:var(--brand);color:var(--on)}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;font-weight:700}
-.btn:hover{border-color:var(--brand)}
-.btn.p{background:var(--brand);border-color:var(--brand);color:var(--on)}
-.btn.d{color:#d6455d}.btn.s{padding:4px 12px;font-size:.85rem}
-.btn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.hero{background:linear-gradient(135deg,var(--soft),var(--card));border:1px solid var(--line);border-radius:calc(var(--radius)*1.4);padding:28px}
-.hero h1{font-size:clamp(1.7rem,5vw,2.6rem);max-width:18ch}.hero p{color:var(--muted);margin:8px 0 0}
-.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--brand);transition:width .4s}
-.banner{background:var(--brand);color:var(--on);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;font-weight:700}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 14px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;text-align:left;padding:0;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
-.card:hover{transform:translateY(-3px);box-shadow:0 10px 24px color-mix(in srgb,var(--brand) 18%,transparent)}
-.cov{background:color-mix(in srgb,var(--c,var(--brand)) 22%,var(--card));font-size:2.6rem;padding:20px;display:flex;justify-content:space-between;align-items:center}
-.cov small{font-size:.75rem;font-weight:700;background:var(--card);border-radius:99px;padding:2px 10px}
-.cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}.cb p{margin:0;color:var(--muted);font-size:.92rem}
-.meta{font-size:.82rem;color:var(--muted)}
-.box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-top:16px}
+.k{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)}
+.nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 0 18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.logo{font-family:'JetBrains Mono',monospace;font-weight:500;margin-right:auto;letter-spacing:-.03em}
+.btn{border:1px solid var(--line);background:transparent;border-radius:var(--radius);padding:7px 14px;font-weight:500;font-size:.9rem}
+.btn:hover{border-color:var(--brand)}.btn.p{background:var(--brand);border-color:var(--brand);color:var(--on)}
+.btn.on{background:var(--soft);border-color:var(--brand)}.btn.d{color:#e5646f}.btn.s{padding:3px 10px;font-size:.8rem}
+.btn:disabled{opacity:.4;cursor:default}
+.bar{height:3px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--brand);transition:width .4s}
+.box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-top:14px}
+.banner{border:1px solid var(--brand);border-radius:var(--radius);padding:9px 14px;margin-bottom:14px;font-size:.9rem}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{margin-left:auto}
-.les{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:calc(var(--radius)*.7);padding:10px 14px;margin-top:8px}
-.les.cur{border-color:var(--brand);background:var(--soft)}
-.dot{flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.75rem}
-.dot.y{background:var(--brand);border-color:var(--brand);color:var(--on)}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:720px){.two{grid-template-columns:1fr}}
-.cm{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.cm:first-of-type{border:0}
-.av{flex:none;width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:1.2rem}
-.f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}.f label{font-weight:700;font-size:.88rem}
-input,textarea,select{border:1.5px solid var(--line);border-radius:calc(var(--radius)*.6);padding:9px 12px;background:var(--bg);width:100%}
-input[type=color]{padding:2px;height:40px}input[type=checkbox]{width:auto}input[type=range]{padding:0}
-textarea{min-height:90px;resize:vertical}
-.err{color:#d6455d;font-weight:700;min-height:1.3em}
-.auth{max-width:390px;margin:0 auto}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;max-width:460px}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
-.tile b{display:block;font-size:1.5rem}.tile span{font-size:.8rem;color:var(--muted)}
-.land{text-align:center;padding:7vh 0 24px}.land h1{font-size:clamp(2.4rem,9vw,4.6rem);letter-spacing:-.03em}
-.land p{color:var(--muted);max-width:40ch;margin:12px auto 20px;font-size:1.1rem}
-.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:24px 0 36px}
-.feat div{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}.feat b{display:block;margin-bottom:4px}
-.modal{position:fixed;inset:0;background:rgba(10,25,45,.5);display:grid;place-items:start center;padding:16px;overflow:auto;z-index:5}
-.sheet{background:var(--card);border-radius:calc(var(--radius)*1.3);padding:24px;width:100%;max-width:600px;margin:3vh 0}
-.sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1.5px var(--line)}
-.lb{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:99px;font-weight:700;z-index:9}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;text-align:left;display:flex;flex-direction:column;gap:8px;min-height:170px}
+.card:hover{border-color:var(--brand)}.card p{margin:0;color:var(--muted);font-size:.9rem}.card .bar{margin-top:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:14px}
+.tile{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:12px 14px}
+.tile b{display:block;font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:500}.tile span{font-size:.78rem;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:720px){.two{grid-template-columns:1fr}}
+.les{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-top:8px}
+.les.cur{border-color:var(--brand)}
+.dot{flex:none;width:22px;height:22px;border:1px solid var(--line);display:grid;place-items:center;font:500 .72rem 'JetBrains Mono',monospace;border-radius:2px}
+.dot.y{background:var(--brand);color:var(--on);border-color:var(--brand)}
+.av{flex:none;border-radius:var(--radius);background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;object-fit:cover;font-family:'JetBrains Mono',monospace}
+.cm{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.chat{max-height:48vh;overflow:auto}
+.f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}.f label{font-weight:500;font-size:.85rem}
+input,textarea,select{border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px;background:var(--bg);width:100%}
+input[type=color]{padding:2px;height:38px}input[type=checkbox]{width:auto}input[type=range]{padding:0}input[type=file]{border:0;padding:0;background:none}
+textarea{min-height:80px;resize:vertical}
+.err{color:#e5646f;min-height:1.3em;font-size:.88rem}
+.land{padding:9vh 0 24px}.land h1{font-size:clamp(2.2rem,8vw,4.4rem);max-width:15ch;margin:18px 0 14px}.land p{color:var(--muted);max-width:46ch;margin:0}
+.auth{max-width:440px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:start center;padding:16px;overflow:auto;z-index:5}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;width:100%;max-width:600px;margin:3vh 0}
+.sw{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:1px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:var(--radius);font-size:.88rem;z-index:9}
 </style>
 </head>
 <body><div class="wrap" id="app"></div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,createUserWithEmailAndPassword as signUp,signInWithEmailAndPassword as signIn,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,collection,onSnapshot,addDoc,setDoc,deleteDoc,doc,query,orderBy,arrayUnion,arrayRemove}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,collection,onSnapshot,addDoc,setDoc,deleteDoc,doc,query,orderBy,limit,arrayUnion,arrayRemove,increment}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* ===== 1. EDIT THESE ===== */
+/* ===== YOUR INFO ===== */
 const firebaseConfig={apiKey:"AIzaSyCw1Dwp2dA6fUvrApz4QXdazjrCmWf3X5o",authDomain:"curiosity-maxxing.firebaseapp.com",projectId:"curiosity-maxxing",storageBucket:"curiosity-maxxing.firebasestorage.app",messagingSenderId:"935785815548",appId:"1:935785815548:web:77bc786ca9c2782866a679"};
 const ADMIN_UID="PLSIY3aJbvUma04bivsXjuVt9a23";
-const FORM_URL="https://forms.gle/AiDJinhiE2AC86YS9"; // can also be changed later inside the app
-/* ========================= */
+const FORM_URL="https://forms.gle/AiDJinhiE2AC86YS9";
+/* ===================== */
 
 const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(auth.app);
-const THEMES={Leaf:["#60992d","#f7f9f2","#ffffff","#1f2a14"],Sky:["#4aa3ff","#f4f9ff","#ffffff","#16324f"],Blush:["#f0709c","#fff6f9","#ffffff","#4a2433"],Mint:["#25b385","#f1fbf7","#ffffff","#16382d"],Lilac:["#8b7bff","#f6f4ff","#ffffff","#2a2347"],Sunny:["#f5a623","#fffaf0","#ffffff","#45331a"],Night:["#6cb4ff","#0f1b2d","#172740","#e8f1ff"]};
-const FONTS={Round:"'Fredoka',sans-serif",Clean:"'Nunito',sans-serif",Serif:"'Lora',serif"};
-const LEVELS=["Beginner","Intermediate","Advanced"];
-let user,courses=[],users=[],comments=[],likes=[],site={},view="home",cid=null,li=0,modal=null,edit=null,filter="All",mode="login",unsubs=[];
-let theme={brand:"#60992d",bg:"#f7f9f2",card:"#ffffff",ink:"#1f2a14",radius:16,font:"Clean"};
-try{Object.assign(theme,JSON.parse(localStorage.getItem("theme2")||"{}"))}catch{}
+const TOPICS=["Coding","Politics","News","Chess","Writing","Science","History","Money"],LEVELS=["Beginner","Intermediate","Advanced"];
+const THEMES={Mono:["#ffffff","#0a0a0b","#131315","#ececec"],Paper:["#111111","#f3f3f4","#ffffff","#111111"],Pink:["#e891b4","#fff5f9","#ffffff","#3a2230"],Blue:["#7fa9e0","#f3f8ff","#ffffff","#1d2f47"],Green:["#78c19a","#f2fbf6","#ffffff","#1c3a2b"]};
+const FONTS={Clean:"'Inter',sans-serif",Tech:"'JetBrains Mono',monospace"};
+let user,courses=[],users=[],posts=[],groups=[],msgs=[],likes=[],site={},view="home",tab="feed",gid=null,openPost=null,cid=null,li=0,modal=null,edit=null,filter="For you",mode="login",picked=[],unsubs=[];
+let theme={brand:"#ffffff",bg:"#0a0a0b",card:"#131315",ink:"#ececec",radius:4,font:"Clean"};
+try{Object.assign(theme,JSON.parse(localStorage.getItem("theme3")||"{}"))}catch{}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const isAdmin=()=>user&&user.uid===ADMIN_UID;
-const me=()=>users.find(u=>u.id===user?.uid)||{name:"",emoji:"🙂",done:[],bio:""};
+const me=()=>users.find(u=>u.id===user?.uid)||{name:"",done:[],log:[],coins:0,interests:[],w:{}};
 const toast=m=>{const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2200)};
 const lum=h=>{const n=parseInt(h.slice(1),16),f=v=>(v/=255)<=.03928?v/12.92:((v+.055)/1.055)**2.4;return .2126*f(n>>16)+.7152*f(n>>8&255)+.0722*f(n&255)};
 function applyTheme(){const r=document.documentElement.style,t=theme;
  r.setProperty("--brand",t.brand);r.setProperty("--bg",t.bg);r.setProperty("--card",t.card);r.setProperty("--ink",t.ink);
- r.setProperty("--on",lum(t.brand)>.5?"#16324f":"#fff");r.setProperty("--radius",t.radius+"px");r.setProperty("--font",FONTS[t.font]||FONTS.Clean);
- try{localStorage.setItem("theme2",JSON.stringify(t))}catch{}}
+ r.setProperty("--on",lum(t.brand)>.45?"#111":"#fff");r.setProperty("--radius",t.radius+"px");r.setProperty("--font",FONTS[t.font]||FONTS.Clean);
+ try{localStorage.setItem("theme3",JSON.stringify(t))}catch{}}
 applyTheme();
 const saveMe=p=>setDoc(doc(db,"users",user.uid),p,{merge:true});
 const key=(c,i)=>c+":"+i;
 const day=d=>{d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 const streak=u=>{const s=new Set((u.log||[]).map(x=>x.split("|")[0]));let n=0,d=new Date();if(!s.has(day(d)))d.setDate(d.getDate()-1);while(s.has(day(d))){n++;d.setDate(d.getDate()-1)}return n};
-const count=(u,p)=>{const t=day(),w=day(new Date(Date.now()-6*864e5));return new Set((u.log||[]).filter(x=>p=="all"||(p=="day"?x.startsWith(t):x.split("|")[0]>=w))).size};
-let lb="week";
-const prog=c=>{const n=(c.lessons||[]).length,d=me().done||[];return{n,d:(c.lessons||[]).filter((_,i)=>d.includes(key(c.id,i))).length}};
+const age=b=>{const d=new Date(b),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))a--;return a};
+const ago=t=>{const s=(Date.now()-t)/1000;return s<60?"now":s<3600?Math.floor(s/60)+"m":s<86400?Math.floor(s/3600)+"h":Math.floor(s/86400)+"d"};
+const prog=c=>{const L=c.lessons||[],d=me().done||[];return{n:L.length,d:L.filter((_,i)=>d.includes(key(c.id,i))).length}};
+const score=c=>{const m=me(),k=(c.category||"").toLowerCase(),p=prog(c);return((m.interests||[]).some(i=>i.toLowerCase()==k)?6:0)+((m.w||{})[c.category]||0)+(c.featured?1:0)-(p.n&&p.d==p.n?20:0)};
+const likeN=id=>likes.filter(l=>l.c==id).length,liked=id=>likes.some(l=>l.id==id+"_"+user.uid);
+const av=(u,s)=>u?.pfp?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u?.name||"?")[0]||"?").toUpperCase()}</div>`;
 
 /* ---------- data ---------- */
 onAuthStateChanged(auth,u=>{user=u;unsubs.forEach(f=>f());unsubs=[];
  if(u){const L=(q,fn)=>unsubs.push(onSnapshot(q,s=>{fn(s.docs.map(d=>({id:d.id,...d.data()})));render()},e=>console.error(e)));
-  L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);
-  L(collection(db,"users"),x=>users=x);
-  L(query(collection(db,"comments"),orderBy("at","desc")),x=>comments=x);
-  L(collection(db,"likes"),x=>likes=x);
+  L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);L(collection(db,"users"),x=>users=x);
+  L(query(collection(db,"posts"),orderBy("at","desc"),limit(200)),x=>posts=x);L(query(collection(db,"groups"),orderBy("at","desc")),x=>groups=x);
+  L(query(collection(db,"msgs"),orderBy("at","desc"),limit(300)),x=>msgs=x);L(collection(db,"likes"),x=>likes=x);
   unsubs.push(onSnapshot(doc(db,"settings","site"),s=>{site=s.data()||{};render()}));
- }else{courses=[];users=[];view="home";}
+ }else{courses=[];users=[];view="home"}
  render()});
 
 /* ---------- views ---------- */
-const nav=()=>`<div class="nav"><div class="logo"><i>✦</i>${esc(site.name||"Nibble")}</div>
- <button class="btn ${view=="home"||view=="course"?"on":""}" data-a="go" data-v="home">courses</button>
- <button class="btn ${view=="people"?"on":""}" data-a="go" data-v="people">community</button>
- <button class="btn ${view=="me"?"on":""}" data-a="go" data-v="me">${esc(me().emoji||"🙂")} me</button>
- ${isAdmin()?`<button class="btn p" data-a="new">+ Course</button><button class="btn" data-a="site">⚙ Site</button>`:""}</div>`;
+const nm=()=>esc((site.name||"curiosity maxxing").toLowerCase());
+const nav=()=>`<div class="nav"><div class="logo">${nm()}</div>
+ ${[["home","Courses"],["comm","Community"],["me","Profile"],["set","Settings"]].map(([v,n])=>`<button class="btn ${view==v||(v=="home"&&view=="course")?"on":""}" data-a="go" data-v="${v}">${n}</button>`).join("")}
+ ${isAdmin()?`<button class="btn p" data-a="new">New course</button><button class="btn" data-a="site">Site</button>`:""}</div>`;
 
-const LAND=`<div class="land"><div class="logo" style="justify-content:center;margin-bottom:28px"><i>✦</i>nibble</div><h1>learn with friends.</h1><p>short courses, a friendly leaderboard, and streaks that keep you coming back.</p><a class="btn p" href="#join">start learning free</a></div>
-<div class="feat"><div><b>short courses</b><span class="meta">bite-sized lessons you can finish in minutes</span></div><div><b>leaderboard</b><span class="meta">see your rank today, this week, all time</span></div><div><b>streaks</b><span class="meta">keep your daily learning chain alive</span></div><div><b>community</b><span class="meta">chat under every course</span></div><div><b>progress</b><span class="meta">watch every course bar fill up</span></div><div><b>make it yours</b><span class="meta">pick any color, font and vibe</span></div></div>`;
-const authView=()=>{const s=mode=="up";return LAND+`<div class="auth box" id="join"><div class="logo"><i>✦</i>${esc(site.name||"Nibble")}</div>
- <h2 style="margin:16px 0 4px">${s?"Create your account":"Welcome back"}</h2><p class="meta">Short courses you can finish in minutes.</p>
- <form id="authF">${s?`<div class="f"><label for="nm">Name</label><input id="nm" required maxlength="24"></div>`:""}
+const authView=()=>{const s=mode=="up";return`<div class="land"><div class="logo">${nm()}</div><h1>Learn one small thing at a time.</h1><p>Short courses on code, politics, chess and more. Build a streak, earn coins, and learn with a community.</p></div>
+ <div class="auth box"><h2>${s?"Create your account":"Log in"}</h2><form id="authF" style="margin-top:14px">
+ ${s?`<div class="f"><label for="nm">Name</label><input id="nm" required maxlength="24"></div>`:""}
  <div class="f"><label for="em">Email</label><input id="em" type="email" required></div>
  <div class="f"><label for="pw">Password</label><input id="pw" type="password" minlength="6" required></div>
+ ${s?`<div class="f"><label for="bd">Birthday</label><input id="bd" type="date" required></div>
+ <div class="f"><label>Pick topics you like</label><div class="row" style="gap:6px">${TOPICS.map(t=>`<button type="button" class="btn s ${picked.includes(t)?"on":""}" data-a="topic" data-v="${t}">${t}</button>`).join("")}</div></div>`:""}
  <div class="err" id="err"></div><button class="btn p" style="width:100%">${s?"Sign up":"Log in"}</button></form>
- <p><button class="btn s" data-a="mode">${s?"I have an account":"New here? Sign up"}</button></p></div>`};
+ <p><button class="btn s" data-a="mode">${s?"I have an account":"Create an account"}</button></p></div>`};
 
-const likeCount=id=>likes.filter(l=>l.c==id).length;
-function home(){const vis=courses.filter(c=>!c.draft||isAdmin());
- const cats=["All",...new Set(vis.map(c=>c.category).filter(Boolean))],list=vis.filter(c=>filter=="All"||c.category==filter);
- const tot=vis.reduce((a,c)=>a+prog(c).n,0),dn=vis.reduce((a,c)=>a+prog(c).d,0);
+function home(){const vis=courses.filter(c=>!c.draft||isAdmin()),m=me();
+ const cats=["For you",...new Set(vis.map(c=>c.category).filter(Boolean))];
+ const list=(filter=="For you"?vis:vis.filter(c=>c.category==filter)).sort((a,b)=>score(b)-score(a));
  return`${site.banner?`<div class="banner">${esc(site.banner)}</div>`:""}
- <div class="hero"><h1>${esc(site.tagline||"learn something new, together.")}</h1>
- <p>hey ${esc(me().name||"there")} 👋</p><div class="tiles"><div class="tile"><b>🔥 ${streak(me())}</b><span>day streak</span></div><div class="tile"><b>${count(me(),"week")}</b><span>lessons this week</span></div><div class="tile"><b>${dn}/${tot}</b><span>total done</span></div></div></div>
+ <h1 style="font-size:clamp(1.6rem,4vw,2.3rem)">${esc(site.tagline||"Pick up something new today.")}</h1>
+ <div class="tiles" style="max-width:520px"><div class="tile"><b>${streak(m)}d</b><span>streak</span></div><div class="tile"><b>${m.coins||0}</b><span>coins</span></div><div class="tile"><b>${(m.done||[]).length}</b><span>lessons done</span></div></div>
  <div class="chips">${cats.map(c=>`<button class="btn s ${c==filter?"on":""}" data-a="cat" data-v="${esc(c)}">${esc(c)}</button>`).join("")}</div>
- ${list.length?`<div class="grid">${list.map(c=>{const p=prog(c);return`<button class="card" style="--c:${esc(c.color||"")}" data-a="open" data-v="${c.id}">
-  <div class="cov"><span>${esc(c.emoji||"✨")}</span>${c.draft?"<small>Draft</small>":c.featured?"<small>★ Featured</small>":""}</div>
-  <div class="cb"><h3>${esc(c.title)}</h3><p>${esc(c.blurb)}</p><div class="meta">${esc(c.level||"")} · ${esc(c.mins||"?")} min · ${p.n} lessons · ♥ ${likeCount(c.id)}</div>
-  <div class="bar" style="margin-top:6px"><i style="width:${p.n?p.d/p.n*100:0}%"></i></div></div></button>`}).join("")}</div>`
- :`<div class="box meta">No courses yet. ${isAdmin()?`<button class="btn p" data-a="seed">Add 2 starter courses</button>`:"Check back soon!"}</div>`}
- <div class="box row"><div><h3>Got an idea?</h3><span class="meta">Suggest a course you'd love to see.</span></div>
- <a class="btn p sp" href="${esc(site.formUrl||FORM_URL)}" target="_blank" rel="noopener" style="text-decoration:none">Suggest a course</a></div>`}
+ ${list.length?`<div class="grid">${list.map(c=>{const p=prog(c);return`<button class="card" data-a="open" data-v="${c.id}"><span class="k">${esc(c.category||"General")} / ${esc(c.level||"")}${c.draft?" / draft":c.featured?" / featured":""}</span>
+  <h3>${esc(c.title)}</h3><p>${esc(c.blurb)}</p><span class="k">${esc(c.mins||"?")} min / ${p.n} lessons / ${p.d} done</span><div class="bar"><i style="width:${p.n?p.d/p.n*100:0}%"></i></div></button>`}).join("")}</div>`
+ :`<div class="box k">No courses yet. ${isAdmin()?`<button class="btn p" data-a="seed">Add 2 starter courses</button>`:""}</div>`}
+ <div class="box row"><div><h3>Got an idea?</h3><span class="k">Suggest a course you want to see.</span></div><a class="btn p sp" href="${esc(site.formUrl||FORM_URL)}" target="_blank" rel="noopener" style="text-decoration:none">Suggest a course</a></div>`}
 
-function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class="btn" data-a="go" data-v="home">← Back</button>`;
- const ls=c.lessons||[],l=ls[li]||{t:"",b:""},d=me().done||[],liked=likes.some(x=>x.id==cid+"_"+user.uid),cms=comments.filter(x=>x.cid==cid);
- return`<div class="row"><button class="btn" data-a="go" data-v="home">← Back</button>${isAdmin()?`<button class="btn sp" data-a="edit" data-v="${c.id}">Edit course</button>`:""}</div>
- <div class="box" style="--c:${esc(c.color||"")}"><div class="row"><span style="font-size:2.6rem">${esc(c.emoji||"✨")}</span><div><h1 style="font-size:1.7rem">${esc(c.title)}</h1>
- <span class="meta">${esc(c.level||"")} · ${esc(c.mins||"?")} min · ${esc(c.category||"")}</span></div>
- <button class="btn sp ${liked?"p":""}" data-a="like">♥ ${likeCount(c.id)}</button></div><p>${esc(c.blurb)}</p></div>
- <div class="two"><div><h3 style="margin-top:20px">Lessons</h3>${ls.map((x,i)=>`<button class="les ${i==li?"cur":""}" data-a="les" data-v="${i}"><span class="dot ${d.includes(key(c.id,i))?"y":""}">${d.includes(key(c.id,i))?"✓":i+1}</span>${esc(x.t)}</button>`).join("")}</div>
- <div class="box"><h2>${esc(l.t)}</h2>${(l.b||"").split("\n").filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join("")}
+function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class="btn" data-a="go" data-v="home">Back</button>`;
+ const ls=c.lessons||[],l=ls[li]||{t:"",b:""},d=me().done||[];
+ return`<div class="row"><button class="btn" data-a="go" data-v="home">Back</button>${isAdmin()?`<button class="btn sp" data-a="edit" data-v="${c.id}">Edit course</button>`:""}</div>
+ <div class="box"><span class="k">${esc(c.category||"")} / ${esc(c.level||"")} / ${esc(c.mins||"?")} min</span><h1 style="margin:6px 0">${esc(c.title)}</h1><span style="color:var(--muted)">${esc(c.blurb)}</span></div>
+ <div class="two"><div>${ls.map((x,i)=>`<button class="les ${i==li?"cur":""}" data-a="les" data-v="${i}"><span class="dot ${d.includes(key(c.id,i))?"y":""}">${d.includes(key(c.id,i))?"ok":i+1}</span>${esc(x.t)}</button>`).join("")}</div>
+ <div class="box" style="margin-top:8px"><h2>${esc(l.t)}</h2>${(l.b||"").split("\n").filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join("")}
  ${l.l?`<p><a class="btn s" href="${esc(l.l)}" target="_blank" rel="noopener" style="text-decoration:none">Open resource</a></p>`:""}
- <div class="row" style="margin-top:14px"><button class="btn p" data-a="done">${d.includes(key(c.id,li))?"Undo":"Mark as done ✓"}</button>
- <button class="btn s" data-a="les" data-v="${li-1}" ${li?"":"disabled"}>Back</button><button class="btn s" data-a="les" data-v="${li+1}" ${li<ls.length-1?"":"disabled"}>Next</button></div></div></div>
- ${site.comments===false?"":`<div class="box"><h3>Discussion</h3><form id="cmF" class="row" style="margin:10px 0"><input id="ct" maxlength="400" placeholder="Share a thought or ask a question" style="flex:1"><button class="btn p">Post</button></form>
- ${cms.map(x=>`<div class="cm"><div class="av">${esc(x.emoji)}</div><div style="flex:1"><b>${esc(x.name)}</b> <span class="meta">${x.at?new Date(x.at).toLocaleDateString():""}</span><div>${esc(x.text)}</div></div>
- ${isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delc" data-v="${x.id}">✕</button>`:""}</div>`).join("")||'<p class="meta">Be the first to say something.</p>'}</div>`}`}
+ <div class="row" style="margin-top:14px"><button class="btn p" data-a="done">${d.includes(key(c.id,li))?"Undo":"Mark as done (+10 coins)"}</button>
+ <button class="btn s" data-a="les" data-v="${li-1}" ${li?"":"disabled"}>Prev</button><button class="btn s" data-a="les" data-v="${li+1}" ${li<ls.length-1?"":"disabled"}>Next</button></div></div></div>`}
 
-function people(){const top=[...users].filter(u=>u.name).sort((a,b)=>count(b,lb)-count(a,lb)).slice(0,10);
- return`<div class="two"><div class="box"><h3>leaderboard</h3><div class="row" style="margin:10px 0">${[["day","today"],["week","this week"],["all","all time"]].map(([k,n])=>`<button class="btn s ${k==lb?"on":""}" data-a="lb" data-v="${k}">${n}</button>`).join("")}</div>${top.map((u,i)=>`<div class="lb"><b>${i+1}</b><div class="av">${esc(u.emoji||"🙂")}</div><div style="flex:1"><b>${esc(u.name)}</b><div class="meta">${esc(u.bio||"")}</div></div><span class="meta">🔥${streak(u)}</span><b>${count(u,lb)} ✓</b></div>`).join("")}</div>
- <div class="box"><h3>Latest chatter</h3>${comments.slice(0,12).map(x=>{const c=courses.find(y=>y.id==x.cid);return`<div class="cm"><div class="av">${esc(x.emoji)}</div><div><b>${esc(x.name)}</b> <span class="meta">on ${esc(c?.title||"a course")}</span><div>${esc(x.text)}</div></div></div>`}).join("")||'<p class="meta">Nothing yet.</p>'}</div></div>`}
+function postHtml(p){const u=users.find(x=>x.id==p.uid),rs=posts.filter(x=>x.parent==p.id).reverse();
+ const who=(w,t)=>`<b>${esc(w?.name||"user")}</b> <span class="k">${esc(w?.pronouns||"")} ${w?.pronouns?"/":""} ${ago(t)}</span>`,del=x=>isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delp" data-v="${x.id}">Delete</button>`:"";
+ return`<div class="box"><div class="row">${av(u,36)}<div>${who(u,p.at)}</div><span class="sp">${del(p)}</span></div><p style="margin:10px 0;white-space:pre-wrap">${esc(p.text)}</p>
+ <div class="row"><button class="btn s ${liked(p.id)?"p":""}" data-a="like" data-v="${p.id}">Like ${likeN(p.id)}</button><button class="btn s" data-a="thread" data-v="${p.id}">Replies ${rs.length}</button></div>
+ ${openPost==p.id?`<div style="margin-top:12px">${rs.map(r=>{const w=users.find(x=>x.id==r.uid);return`<div class="cm">${av(w,28)}<div style="flex:1">${who(w,r.at)}<div>${esc(r.text)}</div><button class="btn s ${liked(r.id)?"p":""}" data-a="like" data-v="${r.id}">Like ${likeN(r.id)}</button></div>${del(r)}</div>`}).join("")}
+ <form id="rpF" class="row" style="margin-top:10px"><input id="rt" maxlength="500" placeholder="Write a reply" style="flex:1"><button class="btn p">Reply</button></form></div>`:""}</div>`}
 
-function profile(){const m=me();return`<div class="two"><div class="box"><h3>Your profile</h3><form id="meF" style="margin-top:12px">
- <div class="f"><label for="pn">Name</label><input id="pn" value="${esc(m.name)}" maxlength="24"></div>
- <div class="f"><label for="pe">Avatar emoji</label><input id="pe" value="${esc(m.emoji||"🙂")}" maxlength="4"></div>
- <div class="f"><label for="pb">Bio</label><input id="pb" value="${esc(m.bio||"")}" maxlength="80" placeholder="Learning chess and JS"></div>
- <button class="btn p">Save profile</button></form><p><button class="btn d" data-a="out">Log out</button></p></div>
- <div class="box"><h3>Make it yours</h3><p class="meta">Pick a look, then tweak it.</p>
- <div class="row">${Object.entries(THEMES).map(([n,t])=>`<button class="sw" title="${n}" style="background:${t[0]}" data-a="preset" data-v="${n}"></button>`).join("")}</div>
- <div class="two" style="gap:10px;margin-top:14px"><div class="f"><label for="tb">Accent</label><input id="tb" type="color" data-t="brand" value="${theme.brand}"></div>
- <div class="f"><label for="tg">Background</label><input id="tg" type="color" data-t="bg" value="${theme.bg}"></div></div>
- <div class="f"><label for="tr">Roundness</label><input id="tr" type="range" min="4" max="32" data-t="radius" value="${theme.radius}"></div>
+const feed=()=>`<form id="poF" class="box"><textarea id="pt" maxlength="500" placeholder="Say what's on your mind"></textarea><div class="row" style="margin-top:8px"><span class="k">max 500 characters</span><button class="btn p sp">Post</button></div></form>${posts.filter(p=>!p.parent).map(postHtml).join("")||'<p class="k">No posts yet. Start the conversation.</p>'}`;
+
+function groupsView(){const g=groups.find(x=>x.id==gid),ms=g?msgs.filter(m=>m.gid==gid).reverse():[];
+ return`<div class="two"><div><form id="gpF" class="box"><div class="f"><label for="gn">New group</label><input id="gn" required maxlength="30" placeholder="Name"></div><div class="f"><input id="gd" maxlength="80" placeholder="What is it about?" aria-label="Group description"></div><button class="btn p">Create group</button></form>
+ ${groups.map(x=>`<button class="les ${x.id==gid?"cur":""}" data-a="grp" data-v="${x.id}"><span><b>${esc(x.name)}</b><br><span class="k">${esc(x.desc||"")}</span></span></button>`).join("")}</div>
+ <div class="box">${g?`<div class="row"><h3>${esc(g.name)}</h3>${isAdmin()||g.owner==user.uid?`<button class="btn s d sp" data-a="delg" data-v="${g.id}">Delete group</button>`:""}</div>
+ <div class="chat">${ms.map(m=>{const u=users.find(x=>x.id==m.uid);return`<div class="cm">${av(u,28)}<div><b>${esc(u?.name||"user")}</b> <span class="k">${ago(m.at)}</span><div>${esc(m.text)}</div></div></div>`}).join("")||'<p class="k">No messages yet.</p>'}</div>
+ <form id="mgF" class="row" style="margin-top:10px"><input id="mt" maxlength="500" placeholder="Message" style="flex:1"><button class="btn p">Send</button></form>`:'<p class="k">Pick or create a group to start chatting.</p>'}</div></div>`}
+
+const comm=()=>`<div class="row">${[["feed","Feed"],["groups","Groups"]].map(([t,n])=>`<button class="btn ${t==tab?"on":""}" data-a="tab" data-v="${t}">${n}</button>`).join("")}</div>`+(tab=="feed"?feed():groupsView());
+
+function profile(){const m=me(),dn=courses.filter(c=>{const p=prog(c);return p.n&&p.d==p.n}).length;
+ return`<div class="box"><div class="row" style="align-items:flex-start">${av(m,88)}<div style="flex:1"><h1>${esc(m.name)}</h1><div class="k">${esc(m.pronouns||"no pronouns set")}</div><p style="max-width:52ch;margin:8px 0 0">${esc(m.bio||"No bio yet.")}</p></div><button class="btn" data-a="go" data-v="set">Edit profile</button></div></div>
+ <div class="tiles">${[[(m.done||[]).length,"lessons completed"],[dn,"courses completed"],[streak(m)+"d","day streak"],[m.coins||0,"coins"]].map(([a,b])=>`<div class="tile"><b>${a}</b><span>${b}</span></div>`).join("")}</div>`}
+
+function settings(){const m=me();return`<div class="two"><div class="box"><h3>Profile</h3><div class="row" style="margin:12px 0">${av(m,64)}<div class="f" style="margin:0"><label for="pf">Profile photo</label><input id="pf" type="file" accept="image/*"></div></div>
+ <form id="meF"><div class="f"><label for="pn">Name</label><input id="pn" value="${esc(m.name)}" maxlength="24"></div>
+ <div class="f"><label for="pr">Pronouns</label><input id="pr" value="${esc(m.pronouns||"")}" maxlength="20" placeholder="she/her, he/him, they/them"></div>
+ <div class="f"><label for="pb">Bio</label><textarea id="pb" maxlength="160">${esc(m.bio||"")}</textarea></div><button class="btn p">Save profile</button></form>
+ <p><button class="btn d" data-a="out">Log out</button></p></div>
+ <div class="box"><h3>Appearance</h3><p class="k">Start dark, or switch to a pastel.</p>
+ <div class="row" style="gap:6px">${Object.entries(THEMES).map(([n,t])=>`<button class="btn s" data-a="preset" data-v="${n}"><span class="sw" style="background:${t[0]}"></span>${n}</button>`).join("")}</div>
+ <div class="two" style="gap:10px;margin-top:14px"><div class="f"><label for="tb">Accent</label><input id="tb" type="color" data-t="brand" value="${theme.brand}"></div><div class="f"><label for="tg">Background</label><input id="tg" type="color" data-t="bg" value="${theme.bg}"></div></div>
+ <div class="f"><label for="tr">Corner roundness</label><input id="tr" type="range" min="0" max="14" data-t="radius" value="${theme.radius}"></div>
  <div class="f"><label for="tf">Font</label><select id="tf" data-t="font">${Object.keys(FONTS).map(f=>`<option ${f==theme.font?"selected":""}>${f}</option>`).join("")}</select></div></div></div>`}
 
 function editor(){const e=edit;return`<div class="modal"><div class="sheet"><div class="row"><h2>${e.id?"Edit course":"New course"}</h2><button class="btn s sp" data-a="x">Close</button></div>
- <form id="edF" style="margin-top:12px"><div class="f"><label for="et">Title</label><input id="et" required maxlength="60" value="${esc(e.title)}"></div>
- <div class="two" style="gap:10px"><div class="f"><label for="ee">Emoji</label><input id="ee" maxlength="4" value="${esc(e.emoji)}"></div><div class="f"><label for="ec">Category</label><input id="ec" value="${esc(e.category)}" list="cl"></div></div>
- <datalist id="cl">${[...new Set(courses.map(c=>c.category))].map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
- <div class="f"><label for="eb">Short description</label><input id="eb" maxlength="100" value="${esc(e.blurb)}"></div>
- <div class="two" style="gap:10px"><div class="f"><label for="el">Level</label><select id="el">${LEVELS.map(l=>`<option ${l==e.level?"selected":""}>${l}</option>`).join("")}</select></div>
- <div class="f"><label for="em">Minutes</label><input id="em" type="number" min="1" value="${esc(e.mins)}"></div></div>
- <div class="two" style="gap:10px"><div class="f"><label for="eo">Card color</label><input id="eo" type="color" value="${esc(e.color)}"></div>
- <div class="f"><label for="er">Sort number (low first)</label><input id="er" type="number" value="${esc(e.order)}"></div></div>
+ <form id="edF" style="margin-top:12px"><div class="f"><label for="et">Title</label><input id="et" required maxlength="70" value="${esc(e.title)}"></div>
+ <div class="two" style="gap:10px"><div class="f"><label for="ec">Category (match a topic to recommend it)</label><input id="ec" value="${esc(e.category)}" list="cl"></div>
+ <div class="f"><label for="el">Level</label><select id="el">${LEVELS.map(l=>`<option ${l==e.level?"selected":""}>${l}</option>`).join("")}</select></div></div>
+ <datalist id="cl">${[...new Set([...TOPICS,...courses.map(c=>c.category)])].map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+ <div class="f"><label for="eb">Short description</label><input id="eb" maxlength="110" value="${esc(e.blurb)}"></div>
+ <div class="two" style="gap:10px"><div class="f"><label for="em">Minutes</label><input id="em" type="number" min="1" value="${esc(e.mins)}"></div><div class="f"><label for="er">Sort number</label><input id="er" type="number" value="${esc(e.order)}"></div></div>
  <label><input id="ef" type="checkbox" ${e.featured?"checked":""}> Featured</label> &nbsp; <label><input id="ed" type="checkbox" ${e.draft?"checked":""}> Draft (only you see it)</label>
- <h3 style="margin:18px 0 6px">Lessons</h3>
- ${e.lessons.map((l,i)=>`<div class="box" style="margin-top:10px"><div class="row"><b>Lesson ${i+1}</b><span class="sp"></span>
- <button type="button" class="btn s" data-a="mv" data-v="${i}:-1">↑</button><button type="button" class="btn s" data-a="mv" data-v="${i}:1">↓</button><button type="button" class="btn s d" data-a="rm" data-v="${i}">Remove</button></div>
- <div class="f"><label for="lt${i}">Title</label><input id="lt${i}" value="${esc(l.t)}"></div>
- <div class="f"><label for="lb${i}">Text (new line = new paragraph)</label><textarea id="lb${i}">${esc(l.b)}</textarea></div>
- <div class="f"><label for="ll${i}">Link (optional, video or article)</label><input id="ll${i}" value="${esc(l.l)}"></div></div>`).join("")}
- <p><button type="button" class="btn" data-a="addl">+ Add lesson</button></p>
+ <h3 style="margin:16px 0 4px">Lessons</h3>
+ ${e.lessons.map((l,i)=>`<div class="box"><div class="row"><b>Lesson ${i+1}</b><span class="sp"></span><button type="button" class="btn s" data-a="mv" data-v="${i}:-1">Up</button><button type="button" class="btn s" data-a="mv" data-v="${i}:1">Down</button><button type="button" class="btn s d" data-a="rm" data-v="${i}">Remove</button></div>
+ <div class="f"><label for="lt${i}">Title</label><input id="lt${i}" value="${esc(l.t)}"></div><div class="f"><label for="lb${i}">Text (new line = new paragraph)</label><textarea id="lb${i}">${esc(l.b)}</textarea></div>
+ <div class="f"><label for="ll${i}">Link (optional)</label><input id="ll${i}" value="${esc(l.l)}"></div></div>`).join("")}
+ <p><button type="button" class="btn" data-a="addl">Add lesson</button></p>
  <div class="row"><button class="btn p">Save for everyone</button>${e.id?`<button type="button" class="btn d sp" data-a="delcourse">Delete course</button>`:""}</div></form></div></div>`}
 
 const siteModal=()=>`<div class="modal"><div class="sheet"><div class="row"><h2>Site settings</h2><button class="btn s sp" data-a="x">Close</button></div>
- <form id="stF" style="margin-top:12px"><div class="f"><label for="sn">Site name</label><input id="sn" value="${esc(site.name||"Nibble")}"></div>
+ <form id="stF" style="margin-top:12px"><div class="f"><label for="sn">Site name</label><input id="sn" value="${esc(site.name||"curiosity maxxing")}"></div>
  <div class="f"><label for="sg">Homepage headline</label><input id="sg" value="${esc(site.tagline||"")}"></div>
  <div class="f"><label for="sb">Announcement banner (empty = hidden)</label><input id="sb" value="${esc(site.banner||"")}"></div>
- <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div>
- <label><input id="sc" type="checkbox" ${site.comments===false?"":"checked"}> Allow comments</label><p><button class="btn p">Save</button></p></form></div></div>`;
+ <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><button class="btn p">Save</button></form></div></div>`;
 
 function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=="checkbox"?el.checked:el.value);
  const fid=document.activeElement?.id,pos=document.activeElement?.selectionStart;
- $("#app").innerHTML=!user?authView():nav()+({home,course,people,me:profile}[view]||home)()+(modal=="edit"?editor():modal=="site"?siteModal():"");
- if(modal||user)for(const id in keep){const el=document.getElementById(id);if(!el||el.type=="color"||el.type=="range")continue;if(el.type=="checkbox")el.checked=keep[id];else if(el.tagName!="SELECT"||1)el.value=keep[id]}
- if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch{}}}}
+ $("#app").innerHTML=!user?authView():nav()+({home,course,comm,me:profile,set:settings}[view]||home)()+(modal=="edit"?editor():modal=="site"?siteModal():"");
+ for(const id in keep){const el=document.getElementById(id);if(!el||["color","range","file"].includes(el.type))continue;if(el.type=="checkbox")el.checked=keep[id];else el.value=keep[id]}
+ if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch{}}}
+ const ch=$(".chat");if(ch)ch.scrollTop=ch.scrollHeight}
 
 /* ---------- actions ---------- */
 function readEdit(){const g=i=>document.getElementById(i);if(!g("et"))return;
- Object.assign(edit,{title:g("et").value,emoji:g("ee").value,category:g("ec").value,blurb:g("eb").value,level:g("el").value,mins:g("em").value,color:g("eo").value,order:g("er").value,featured:g("ef").checked,draft:g("ed").checked});
+ Object.assign(edit,{title:g("et").value,category:g("ec").value,blurb:g("eb").value,level:g("el").value,mins:g("em").value,order:g("er").value,featured:g("ef").checked,draft:g("ed").checked});
  edit.lessons=edit.lessons.map((l,i)=>({t:g("lt"+i).value,b:g("lb"+i).value,l:g("ll"+i).value}))}
-const blank=()=>({title:"",emoji:"✨",category:"",blurb:"",level:"Beginner",mins:5,color:"#4aa3ff",order:courses.length+1,featured:false,draft:false,lessons:[{t:"",b:"",l:""}]});
+const blank=()=>({title:"",category:"",blurb:"",level:"Beginner",mins:5,order:courses.length+1,featured:false,draft:false,lessons:[{t:"",b:"",l:""}]});
 const A={
- go:v=>{view=v;modal=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},
- open:v=>{cid=v;li=0;view="course";render();scrollTo(0,0)},les:v=>{if(+v>=0)li=+v;render()},
- out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";render()},
+ go:v=>{view=v;modal=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
+ topic:v=>{picked=picked.includes(v)?picked.filter(x=>x!=v):[...picked,v];render()},
+ open:v=>{const c=courses.find(x=>x.id==v);cid=v;li=0;view="course";saveMe({w:{[c.category||"General"]:increment(1)}});render();scrollTo(0,0)},
+ les:v=>{if(+v>=0)li=+v;render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";render()},
  new:()=>{edit=blank();modal="edit";render()},
  edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({t:l.t,b:l.b,l:l.l||""}))};modal="edit";render()},
  addl:()=>{readEdit();edit.lessons.push({t:"",b:"",l:""});render()},rm:v=>{readEdit();edit.lessons.splice(+v,1);render()},
  mv:v=>{readEdit();const[i,d]=v.split(":").map(Number),j=i+d,L=edit.lessons;if(L[j])[L[i],L[j]]=[L[j],L[i]];render()},
- done:()=>{const k=key(cid,li),has=(me().done||[]).includes(k);saveMe(has?{done:arrayRemove(k)}:{done:arrayUnion(k),log:arrayUnion(day()+"|"+k)});if(!has)toast("nice work! 🎉")},
- lb:v=>{lb=v;render()},
- like:()=>{const id=cid+"_"+user.uid;likes.some(x=>x.id==id)?deleteDoc(doc(db,"likes",id)):setDoc(doc(db,"likes",id),{c:cid,u:user.uid})},
- delc:v=>deleteDoc(doc(db,"comments",v)),
+ done:()=>{const k=key(cid,li),m=me(),L=m.log||[];if((m.done||[]).includes(k))return saveMe({done:arrayRemove(k)});
+  const first=!L.some(x=>x.endsWith("|"+k)),bonus=L.some(x=>x.startsWith(day()))?0:20,c=first?10+bonus:0;
+  saveMe({done:arrayUnion(k),log:arrayUnion(day()+"|"+k),...(first?{coins:increment(c)}:{})});toast(first?"+"+c+" coins"+(bonus?" (daily bonus)":""):"Done")},
+ like:v=>{const id=v+"_"+user.uid;liked(v)?deleteDoc(doc(db,"likes",id)):setDoc(doc(db,"likes",id),{c:v,u:user.uid})},
+ thread:v=>{openPost=openPost==v?null:v;render()},delp:v=>deleteDoc(doc(db,"posts",v)),
+ grp:v=>{gid=v;render()},delg:async v=>{if(confirm("Delete this group?")){await deleteDoc(doc(db,"groups",v));gid=null}},
  preset:v=>{const t=THEMES[v];Object.assign(theme,{brand:t[0],bg:t[1],card:t[2],ink:t[3]});applyTheme();render()},
  delcourse:async()=>{if(confirm("Delete this course for everyone?")){await deleteDoc(doc(db,"courses",edit.id));modal=null;view="home";render()}},
  seed:async()=>{const S=[
-  {title:"Read the news like a pro",emoji:"📰",category:"News",blurb:"Spot reliable stories fast.",level:"Beginner",mins:6,color:"#4aa3ff",order:1,lessons:[{t:"Check the source",b:"Who published it? Can you name them?\nLook for an author and a date."},{t:"Look past headlines",b:"Headlines are built to grab you.\nRead the full story before you share."},{t:"Cross-check",b:"Find the same story on two other sites.\nNotice what is fact and what is opinion."}]},
-  {title:"Chess basics",emoji:"♟️",category:"Chess",blurb:"Learn how every piece moves.",level:"Beginner",mins:8,color:"#8b7bff",order:2,lessons:[{t:"Pawns, rooks, bishops",b:"Pawns move forward 1 and capture diagonally.\nRooks glide straight. Bishops glide diagonally."},{t:"Knights, queens, kings",b:"Knights jump in an L shape.\nQueens move like a rook plus a bishop.\nKings move 1 square. Protect yours!"}]}];
+  {title:"Reading simple Python",category:"Coding",blurb:"Understand the phrases you see in beginner code.",level:"Beginner",mins:6,order:1,lessons:[{t:"print and variables",b:"print(\"hi\") shows the text hi on screen.\nname = \"Sam\" stores a value so you can use it later.\nA variable is just a label for a value."},{t:"if and for",b:"if age >= 18: runs the lines under it only when the condition is true.\nfor i in range(3): repeats the lines under it 3 times.\nIndentation (the spaces) shows which lines belong together."}]},
+  {title:"The two main US parties",category:"Politics",blurb:"A neutral intro to Republicans and Democrats.",level:"Beginner",mins:7,order:2,lessons:[{t:"Two dominant parties",b:"The US has two major parties: the Democratic Party and the Republican Party.\nMost elected officials belong to one of them. Third parties exist but rarely win national seats."},{t:"What each tends to emphasize",b:"Democrats generally favor a larger federal role in areas like healthcare and support more regulation and social programs.\nRepublicans generally favor a smaller federal government, lower taxes, and more room for states and private businesses.\nBoth parties contain a range of views, and individual members often disagree."},{t:"How to learn more",b:"Read each party's official platform in its own words.\nCompare coverage of the same story from several news outlets."}]}];
   for(const s of S)await addDoc(collection(db,"courses"),s);toast("Added")}};
 document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&A[b.dataset.a]){e.preventDefault();A[b.dataset.a](b.dataset.v)}});
-document.addEventListener("input",e=>{const t=e.target.dataset.t;if(!t)return;theme[t]=t=="radius"?+e.target.value:e.target.value;applyTheme();
- if(t=="font")render()});
-document.addEventListener("submit",async e=>{e.preventDefault();const id=e.target.id,g=i=>document.getElementById(i);
+document.addEventListener("input",e=>{const t=e.target.dataset.t;if(!t)return;theme[t]=t=="radius"?+e.target.value:e.target.value;applyTheme();if(t=="font")render()});
+document.addEventListener("change",e=>{const f=e.target.files?.[0];if(e.target.id!="pf"||!f)return;const im=new Image();
+ im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=128;const s=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);saveMe({pfp:c.toDataURL("image/jpeg",.8)});toast("Photo updated")};im.src=URL.createObjectURL(f)});
+document.addEventListener("submit",async e=>{e.preventDefault();const id=e.target.id,g=i=>document.getElementById(i),v=i=>g(i).value.trim();
  try{
- if(id=="authF"){const em=g("em").value.trim(),pw=g("pw").value;
-  try{if(mode=="up"){const c=await signUp(auth,em,pw);await setDoc(doc(db,"users",c.user.uid),{name:g("nm").value.trim(),emoji:"🙂",bio:"",done:[]})}else await signIn(auth,em,pw)}
-  catch(x){g("err").textContent={"auth/email-already-in-use":"That email already has an account.","auth/invalid-credential":"Email or password is wrong.","auth/weak-password":"Use 6+ characters."}[x.code]||"Something went wrong."}}
- if(id=="meF"){await saveMe({name:g("pn").value.trim(),emoji:g("pe").value.trim()||"🙂",bio:g("pb").value.trim()});toast("Saved")}
- if(id=="cmF"){const t=g("ct").value.trim();if(!t)return;await addDoc(collection(db,"comments"),{cid,uid:user.uid,name:me().name||"Learner",emoji:me().emoji||"🙂",text:t,at:Date.now()});g("ct").value=""}
- if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value,comments:g("sc").checked});modal=null;toast("Saved");render()}
+ if(id=="authF"){const er=g("err");er.textContent="";
+  if(mode=="up"){if(age(g("bd").value)<13)return er.textContent="You must be 13 or older.";if(!picked.length)return er.textContent="Pick at least one topic."}
+  try{if(mode=="up"){const c=await signUp(auth,v("em"),g("pw").value);await setDoc(doc(db,"users",c.user.uid),{name:v("nm"),bday:g("bd").value,interests:picked,pronouns:"",bio:"",pfp:"",done:[],log:[],coins:0,w:{},joined:Date.now()})}else await signIn(auth,v("em"),g("pw").value)}
+  catch(x){er.textContent={"auth/email-already-in-use":"That email already has an account.","auth/invalid-credential":"Email or password is wrong.","auth/weak-password":"Use 6+ characters."}[x.code]||"Something went wrong."}}
+ if(id=="meF"){await saveMe({name:v("pn"),pronouns:v("pr"),bio:v("pb")});toast("Saved")}
+ if(id=="poF"&&v("pt")){await addDoc(collection(db,"posts"),{uid:user.uid,text:v("pt"),at:Date.now(),parent:""});g("pt").value=""}
+ if(id=="rpF"&&v("rt")){await addDoc(collection(db,"posts"),{uid:user.uid,text:v("rt"),at:Date.now(),parent:openPost});g("rt").value=""}
+ if(id=="gpF"){const r=await addDoc(collection(db,"groups"),{name:v("gn"),desc:v("gd"),owner:user.uid,at:Date.now()});gid=r.id;g("gn").value=g("gd").value="";render()}
+ if(id=="mgF"&&v("mt")){await addDoc(collection(db,"msgs"),{gid,uid:user.uid,text:v("mt"),at:Date.now()});g("mt").value=""}
+ if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value});modal=null;toast("Saved");render()}
  if(id=="edF"){readEdit();const{id:eid,...d}=edit;d.order=+d.order||0;d.mins=+d.mins||5;d.lessons=d.lessons.filter(l=>l.t.trim());
   eid?await setDoc(doc(db,"courses",eid),d):await addDoc(collection(db,"courses"),d);modal=null;toast("Published for everyone");render()}
- }catch(x){console.error(x);toast("Couldn't save. Check your admin ID and rules.")}});
+ }catch(x){console.error(x);toast("Could not save. Check your rules.")}});
 </script>
 </body>
 </html>
