@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curiosity Maxxing – max out your learning</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4efff; --card:#ffffff; --ink:#2a2347; --muted:#7b7497; --line:#e6defa;
+  --brand:#8b7bff; --brand-ink:#ffffff;
+  --peach:#ffd9cb; --mint:#c9f0de; --butter:#ffefb8; --sky:#cfe6ff; --pink:#ffd3e8;
+  --shadow:0 10px 30px rgba(90,70,160,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1b1730; --card:#262042; --ink:#f1ecff; --muted:#a79fc9; --line:#3a3260;
+    --peach:#5a3a3a; --mint:#26493d; --butter:#58502a; --sky:#27425e; --pink:#5a2f47; --shadow:0 10px 30px rgba(0,0,0,.3); }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;
+  background-image:radial-gradient(circle at 12% 8%,rgba(139,123,255,.18),transparent 40%),radial-gradient(circle at 88% 20%,rgba(255,184,160,.22),transparent 38%);
+  background-attachment:fixed}
+h1,h2,h3{font-family:'Fredoka',sans-serif;font-weight:600;margin:0;line-height:1.15}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1000px;margin:0 auto;padding:20px 20px 80px}
+.hidden{display:none!important}
+
+/* top bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 18px;flex-wrap:wrap}
+.logo{font-family:'Fredoka';font-size:1.6rem;display:flex;align-items:center;gap:8px}
+.logo span{display:grid;place-items:center;width:38px;height:38px;border-radius:14px;background:var(--brand);color:#fff;font-size:1.2rem;transform:rotate(-6deg)}
+.bar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;padding:10px 18px;font-weight:700;background:var(--card);box-shadow:var(--shadow);transition:transform .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn.primary{background:var(--brand);color:var(--brand-ink)}
+.btn.danger{background:#ff7a8a;color:#fff}
+.btn.small{padding:6px 12px;font-size:.85rem}
+
+/* hero */
+.hero{padding:26px 0 8px}
+.hero h1{font-size:clamp(2rem,6vw,3.4rem);max-width:14ch}
+.hero p{color:var(--muted);font-size:1.1rem;max-width:44ch;margin:12px 0 0}
+.progress{margin-top:20px;background:var(--card);border-radius:22px;padding:14px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;max-width:420px}
+.meter{flex:1;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),#ff9bc4);border-radius:99px;transition:width .5s}
+
+/* chips + grid */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 18px}
+.chip{border:2px solid var(--line);background:transparent;border-radius:999px;padding:7px 16px;font-weight:700}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.card{position:relative;border:0;text-align:left;border-radius:26px;padding:20px;min-height:190px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);transition:transform .18s}
+.card:hover{transform:translateY(-4px) rotate(-.6deg)}
+.card .emoji{font-size:2.3rem}
+.card h3{font-size:1.25rem}
+.card p{margin:0;color:var(--muted);font-size:.93rem}
+.card .meta{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-size:.85rem;font-weight:700}
+.tick{background:#fff;color:#2c9b6a;border-radius:99px;padding:2px 10px}
+.c0{background:var(--peach)}.c1{background:var(--mint)}.c2{background:var(--butter)}.c3{background:var(--sky)}.c4{background:var(--pink)}
+.card .del{position:absolute;top:10px;right:10px}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+/* form callout */
+.callout{margin-top:34px;background:var(--card);border-radius:28px;padding:24px;box-shadow:var(--shadow);display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.callout h3{font-size:1.3rem}.callout p{margin:4px 0 0;color:var(--muted)}
+
+/* auth */
+.auth{max-width:400px;margin:6vh auto 0;background:var(--card);border-radius:32px;padding:32px;box-shadow:var(--shadow)}
+.auth h1{font-size:2rem;margin:10px 0 4px}
+.auth p{color:var(--muted);margin:0 0 18px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.field label{font-weight:700;font-size:.9rem}
+input,textarea,select{border:2px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--bg);width:100%}
+textarea{min-height:140px;resize:vertical}
+.err{color:#e5495f;font-weight:700;min-height:1.4em;margin:4px 0 8px}
+.link{background:none;border:0;color:var(--brand);font-weight:700;padding:0;margin-top:14px;display:block}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(30,20,60,.5);display:grid;place-items:center;padding:16px;z-index:10;overflow:auto}
+.sheet{background:var(--card);border-radius:30px;max-width:560px;width:100%;padding:28px;box-shadow:var(--shadow);max-height:92vh;overflow:auto;animation:pop .2s ease-out}
+@keyframes pop{from{transform:scale(.96);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px}
+.sheet-head .emoji{font-size:2.6rem}
+.step{display:flex;gap:12px;background:var(--bg);border-radius:18px;padding:12px 14px;margin:10px 0}
+.step b{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--brand);color:#fff;font-size:.85rem}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:99px;font-weight:700;z-index:20}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, setDoc, serverTimestamp, query, orderBy, updateDoc, arrayUnion, arrayRemove }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ============ 1. EDIT THESE ============ */
+const firebaseConfig = {
+    apiKey: "AIzaSyCw1Dwp2dA6fUvrApz4QXdazjrCmWf3X5o",
+    authDomain: "curiosity-maxxing.firebaseapp.com",
+    projectId: "curiosity-maxxing",
+    storageBucket: "curiosity-maxxing.firebasestorage.app",
+    messagingSenderId: "935785815548",
+    appId: "1:935785815548:web:77bc786ca9c2782866a679",
+    measurementId: "G-SQRCJ6MEF1"
+  };
+const ADMIN_UID = "PLSIY3aJbvUma04bivsXjuVt9a23";   // only this account sees the admin tools
+const FORM_URL  = "https://forms.gle/6yvCMymmLjZxqCez8";
+const APP_NAME  = "Curiosity Maxxing";
+/* ======================================= */
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const STARTERS = [
+  { emoji:"📰", category:"News", title:"Read the news like a pro", blurb:"Spot reliable stories in 3 minutes.",
+    body:"Check who published it. Is it a source you can name?\nRead past the headline. Headlines are built to grab you.\nLook for the same story on two other sites.\nNotice the difference between facts and opinions.\nCheck the date. Old stories get shared as new ones." },
+  { emoji:"✉️", category:"Writing", title:"Write a friendly letter", blurb:"Five parts, one warm page.",
+    body:"Put the date at the top right.\nGreet them: 'Dear Sam,'\nOpen with something kind or a quick hello.\nWrite your main message in 2 or 3 short paragraphs.\nClose warmly: 'Yours truly,' then sign your name." },
+  { emoji:"♟️", category:"Chess", title:"Chess: how pieces move", blurb:"Meet all six pieces fast.",
+    body:"Pawns move forward 1 square and capture diagonally.\nRooks glide in straight lines.\nBishops glide on diagonals, always on one color.\nKnights jump in an L shape and can hop over pieces.\nQueens move like a rook plus a bishop.\nKings move 1 square any direction. Protect yours!" },
+  { emoji:"💻", category:"Coding", title:"JavaScript: your first variable", blurb:"Store a value in 30 seconds.",
+    body:"A variable is a labeled box for a value.\nWrite: let name = 'Sam';\nUse const when the value will not change: const age = 12;\nPrint it with: console.log(name);\nJoin text with a template: `Hi ${name}!`" }
+];
+
+let user = null, skills = [], done = [], filter = "All", authMode = "login";
+let unsubSkills = null, unsubDone = null;
+const $app = document.getElementById("app");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isAdmin = () => user && user.uid === ADMIN_UID;
+
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+/* ---------- auth ---------- */
+onAuthStateChanged(auth, u => {
+  user = u;
+  unsubSkills?.(); unsubDone?.();
+  if (u) {
+    unsubSkills = onSnapshot(query(collection(db,"skills"), orderBy("createdAt","asc")), snap => {
+      skills = snap.docs.map(d => ({id:d.id, ...d.data()})); render();
+    }, e => console.error(e));
+    unsubDone = onSnapshot(doc(db,"users",u.uid), s => { done = s.exists() ? (s.data().done||[]) : []; render(); });
+  } else { skills = []; done = []; }
+  render();
+});
+
+function authView(){
+  const signup = authMode === "signup";
+  return `<div class="auth">
+    <div class="logo"><span>✦</span>${APP_NAME}</div>
+    <h1>${signup ? "Make your account" : "Welcome back"}</h1>
+    <p>${signup ? "Free, quick, and you keep your progress." : "Log in to pick up where you left off."}</p>
+    <form id="authForm">
+      ${signup ? `<div class="field"><label for="nm">Your name</label><input id="nm" required autocomplete="name"></div>` : ""}
+      <div class="field"><label for="em">Email</label><input id="em" type="email" required autocomplete="email"></div>
+      <div class="field"><label for="pw">Password</label><input id="pw" type="password" minlength="6" required autocomplete="${signup?"new-password":"current-password"}"></div>
+      <div class="err" id="authErr"></div>
+      <button class="btn primary" style="width:100%">${signup ? "Create account" : "Log in"}</button>
+    </form>
+    <button class="link" id="swap">${signup ? "I already have an account" : "New here? Make an account"}</button>
+  </div>`;
+}
+
+/* ---------- main views ---------- */
+function homeView(){
+  const cats = ["All", ...new Set(skills.map(s => s.category).filter(Boolean))];
+  const list = skills.filter(s => filter === "All" || s.category === filter);
+  const doneCount = skills.filter(s => done.includes(s.id)).length;
+  const pct = skills.length ? Math.round(doneCount / skills.length * 100) : 0;
+  const first = (user.displayName || user.email.split("@")[0]);
+  return `
+  <div class="bar">
+    <div class="logo"><span>✦</span>${APP_NAME}</div>
+    <div class="bar-right">
+      ${isAdmin() ? `<button class="btn primary" id="addBtn">+ Add skill</button>` : ""}
+      <button class="btn" id="outBtn">Log out</button>
+    </div>
+  </div>
+  <section class="hero">
+    <h1>Hi ${esc(first)}, what will you learn today?</h1>
+    <p>Tiny lessons you can finish in a few minutes.</p>
+    <div class="progress"><b>${doneCount}/${skills.length}</b><div class="meter"><i style="width:${pct}%"></i></div><span>${pct}%</span></div>
+  </section>
+  <div class="chips">${cats.map(c => `<button class="chip ${c===filter?"on":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("")}</div>
+  ${list.length ? `<div class="grid">${list.map((s,i) => card(s,i)).join("")}</div>` :
+    `<div class="empty">${skills.length ? "Nothing in this group yet." : "No skills yet. " + (isAdmin() ? "Tap “Add skill”, or add the starter set." : "Check back soon!")}
+     ${isAdmin() && !skills.length ? `<p><button class="btn primary" id="seedBtn">Add 4 starter skills</button></p>` : ""}</div>`}
+  <div class="callout">
+    <div><h3>Got a skill idea?</h3><p>Tell us what you want to learn and we may add it.</p></div>
+    <a class="btn primary" href="${esc(FORM_URL)}" target="_blank" rel="noopener" style="text-decoration:none">Suggest a skill</a>
+  </div>`;
+}
+
+function card(s,i){
+  return `<button class="card c${i%5}" data-open="${s.id}">
+    <span class="emoji">${esc(s.emoji||"✨")}</span>
+    <h3>${esc(s.title)}</h3><p>${esc(s.blurb)}</p>
+    <div class="meta"><span>${esc(s.category||"")}</span>${done.includes(s.id)?`<span class="tick">✓ Done</span>`:""}</div>
+  </button>`;
+}
+
+function lessonModal(s){
+  const steps = (s.body||"").split("\n").map(x=>x.trim()).filter(Boolean);
+  const isDone = done.includes(s.id);
+  return `<div class="modal" id="modal"><div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-head"><div><div class="emoji">${esc(s.emoji||"✨")}</div><h2>${esc(s.title)}</h2></div>
+    <button class="btn small" data-close>Close</button></div>
+    ${steps.map((t,i)=>`<div class="step"><b>${i+1}</b><span>${esc(t)}</span></div>`).join("")}
+    <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn primary" data-done="${s.id}">${isDone ? "Mark as not done" : "I learned it! ✓"}</button>
+      ${isAdmin() ? `<button class="btn danger" data-del="${s.id}">Delete skill</button>` : ""}
+    </div></div></div>`;
+}
+
+function adminModal(){
+  return `<div class="modal" id="modal"><div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-head"><h2>Add a skill</h2><button class="btn small" data-close>Close</button></div>
+    <form id="skillForm">
+      <div class="field"><label for="t">Title</label><input id="t" required maxlength="60" placeholder="Write a thank-you note"></div>
+      <div class="field"><label for="e">Emoji</label><input id="e" maxlength="4" placeholder="💌"></div>
+      <div class="field"><label for="c">Category</label><input id="c" required maxlength="24" placeholder="Writing" list="cats"></div>
+      <datalist id="cats">${[...new Set(skills.map(s=>s.category))].map(c=>`<option value="${esc(c)}">`).join("")}</datalist>
+      <div class="field"><label for="b">Short description</label><input id="b" required maxlength="80" placeholder="Say thanks in 4 lines"></div>
+      <div class="field"><label for="d">Lesson steps (one per line)</label><textarea id="d" required placeholder="Start with 'Dear…'&#10;Say what you're thankful for&#10;…"></textarea></div>
+      <button class="btn primary" style="width:100%">Publish for everyone</button>
+    </form></div></div>`;
+}
+
+/* ---------- render + events ---------- */
+let openId = null, showAdd = false;
+function render(){
+  if (!user) { $app.innerHTML = authView(); bindAuth(); return; }
+  const s = skills.find(x => x.id === openId);
+  $app.innerHTML = homeView() + (s ? lessonModal(s) : showAdd ? adminModal() : "");
+  bindHome();
+}
+
+function bindAuth(){
+  document.getElementById("swap").onclick = () => { authMode = authMode==="login" ? "signup" : "login"; render(); };
+  document.getElementById("authForm").onsubmit = async e => {
+    e.preventDefault();
+    const em = document.getElementById("em").value.trim(), pw = document.getElementById("pw").value;
+    const err = document.getElementById("authErr"); err.textContent = "";
+    try {
+      if (authMode === "signup") {
+        const cred = await createUserWithEmailAndPassword(auth, em, pw);
+        await updateProfile(cred.user, { displayName: document.getElementById("nm").value.trim() });
+        await setDoc(doc(db,"users",cred.user.uid), { done: [] });
+      } else await signInWithEmailAndPassword(auth, em, pw);
+    } catch (x) {
+      const m = { "auth/email-already-in-use":"That email already has an account. Try logging in.",
+        "auth/invalid-credential":"Email or password is wrong.", "auth/weak-password":"Use at least 6 characters." };
+      err.textContent = m[x.code] || "Something went wrong. Please try again.";
+    }
+  };
+}
+
+function bindHome(){
+  const $ = s => document.querySelector(s);
+  $("#outBtn").onclick = () => signOut(auth);
+  $("#addBtn") && ($("#addBtn").onclick = () => { showAdd = true; render(); });
+  $("#seedBtn") && ($("#seedBtn").onclick = async () => {
+    for (const s of STARTERS) await addDoc(collection(db,"skills"), { ...s, createdAt: serverTimestamp() });
+    toast("Starter skills added");
+  });
+  document.querySelectorAll("[data-cat]").forEach(b => b.onclick = () => { filter = b.dataset.cat; render(); });
+  document.querySelectorAll("[data-open]").forEach(b => b.onclick = () => { openId = b.dataset.open; render(); });
+  document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => { openId = null; showAdd = false; render(); });
+  const modal = $("#modal");
+  if (modal) modal.onclick = e => { if (e.target === modal) { openId = null; showAdd = false; render(); } };
+
+  document.querySelectorAll("[data-done]").forEach(b => b.onclick = async () => {
+    const id = b.dataset.done;
+    await setDoc(doc(db,"users",user.uid), { done: done.includes(id) ? arrayRemove(id) : arrayUnion(id) }, { merge: true });
+    if (!done.includes(id)) toast("Nice work! 🎉");
+  });
+  document.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    if (!confirm("Delete this skill for everyone?")) return;
+    await deleteDoc(doc(db,"skills",b.dataset.del)); openId = null; toast("Deleted");
+  });
+  const f = $("#skillForm");
+  if (f) f.onsubmit = async e => {
+    e.preventDefault();
+    try {
+      await addDoc(collection(db,"skills"), {
+        title: $("#t").value.trim(), emoji: $("#e").value.trim() || "✨", category: $("#c").value.trim(),
+        blurb: $("#b").value.trim(), body: $("#d").value, createdAt: serverTimestamp()
+      });
+      showAdd = false; toast("Published for everyone"); render();
+    } catch { toast("Couldn't save. Check your admin ID and rules."); }
+  };
+}
+</script>
+</body>
+</html>
