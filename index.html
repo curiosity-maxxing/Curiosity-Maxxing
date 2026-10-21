@@ -6,7 +6,7 @@
 <title>curiosity maxxing</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Lora:wght@500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--brand:#4aa3ff;--bg:#f4f9ff;--card:#fff;--ink:#16324f;--on:#fff;--radius:20px;--font:'Nunito',sans-serif}
+:root{--brand:#60992d;--bg:#f7f9f2;--card:#fff;--ink:#1f2a14;--on:#fff;--radius:16px;--font:'Nunito',sans-serif}
 *{box-sizing:border-box}
 body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.55;min-height:100vh;
  --muted:color-mix(in srgb,var(--ink) 55%,var(--bg));--line:color-mix(in srgb,var(--ink) 12%,var(--card));--soft:color-mix(in srgb,var(--brand) 10%,var(--card))}
@@ -48,7 +48,14 @@ input,textarea,select{border:1.5px solid var(--line);border-radius:calc(var(--ra
 input[type=color]{padding:2px;height:40px}input[type=checkbox]{width:auto}input[type=range]{padding:0}
 textarea{min-height:90px;resize:vertical}
 .err{color:#d6455d;font-weight:700;min-height:1.3em}
-.auth{max-width:390px;margin:8vh auto 0}
+.auth{max-width:390px;margin:0 auto}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;max-width:460px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+.tile b{display:block;font-size:1.5rem}.tile span{font-size:.8rem;color:var(--muted)}
+.land{text-align:center;padding:7vh 0 24px}.land h1{font-size:clamp(2.4rem,9vw,4.6rem);letter-spacing:-.03em}
+.land p{color:var(--muted);max-width:40ch;margin:12px auto 20px;font-size:1.1rem}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:24px 0 36px}
+.feat div{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}.feat b{display:block;margin-bottom:4px}
 .modal{position:fixed;inset:0;background:rgba(10,25,45,.5);display:grid;place-items:start center;padding:16px;overflow:auto;z-index:5}
 .sheet{background:var(--card);border-radius:calc(var(--radius)*1.3);padding:24px;width:100%;max-width:600px;margin:3vh 0}
 .sw{width:34px;height:34px;border-radius:50%;border:3px solid var(--card);box-shadow:0 0 0 1.5px var(--line)}
@@ -70,12 +77,12 @@ const FORM_URL="https://forms.gle/AiDJinhiE2AC86YS9"; // can also be changed lat
 /* ========================= */
 
 const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(auth.app);
-const THEMES={Sky:["#4aa3ff","#f4f9ff","#ffffff","#16324f"],Blush:["#f0709c","#fff6f9","#ffffff","#4a2433"],Mint:["#25b385","#f1fbf7","#ffffff","#16382d"],Lilac:["#8b7bff","#f6f4ff","#ffffff","#2a2347"],Sunny:["#f5a623","#fffaf0","#ffffff","#45331a"],Night:["#6cb4ff","#0f1b2d","#172740","#e8f1ff"]};
+const THEMES={Leaf:["#60992d","#f7f9f2","#ffffff","#1f2a14"],Sky:["#4aa3ff","#f4f9ff","#ffffff","#16324f"],Blush:["#f0709c","#fff6f9","#ffffff","#4a2433"],Mint:["#25b385","#f1fbf7","#ffffff","#16382d"],Lilac:["#8b7bff","#f6f4ff","#ffffff","#2a2347"],Sunny:["#f5a623","#fffaf0","#ffffff","#45331a"],Night:["#6cb4ff","#0f1b2d","#172740","#e8f1ff"]};
 const FONTS={Round:"'Fredoka',sans-serif",Clean:"'Nunito',sans-serif",Serif:"'Lora',serif"};
 const LEVELS=["Beginner","Intermediate","Advanced"];
 let user,courses=[],users=[],comments=[],likes=[],site={},view="home",cid=null,li=0,modal=null,edit=null,filter="All",mode="login",unsubs=[];
-let theme={brand:"#4aa3ff",bg:"#f4f9ff",card:"#ffffff",ink:"#16324f",radius:20,font:"Clean"};
-try{Object.assign(theme,JSON.parse(localStorage.getItem("theme")||"{}"))}catch{}
+let theme={brand:"#60992d",bg:"#f7f9f2",card:"#ffffff",ink:"#1f2a14",radius:16,font:"Clean"};
+try{Object.assign(theme,JSON.parse(localStorage.getItem("theme2")||"{}"))}catch{}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const isAdmin=()=>user&&user.uid===ADMIN_UID;
@@ -85,10 +92,14 @@ const lum=h=>{const n=parseInt(h.slice(1),16),f=v=>(v/=255)<=.03928?v/12.92:((v+
 function applyTheme(){const r=document.documentElement.style,t=theme;
  r.setProperty("--brand",t.brand);r.setProperty("--bg",t.bg);r.setProperty("--card",t.card);r.setProperty("--ink",t.ink);
  r.setProperty("--on",lum(t.brand)>.5?"#16324f":"#fff");r.setProperty("--radius",t.radius+"px");r.setProperty("--font",FONTS[t.font]||FONTS.Clean);
- try{localStorage.setItem("theme",JSON.stringify(t))}catch{}}
+ try{localStorage.setItem("theme2",JSON.stringify(t))}catch{}}
 applyTheme();
 const saveMe=p=>setDoc(doc(db,"users",user.uid),p,{merge:true});
 const key=(c,i)=>c+":"+i;
+const day=d=>{d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const streak=u=>{const s=new Set((u.log||[]).map(x=>x.split("|")[0]));let n=0,d=new Date();if(!s.has(day(d)))d.setDate(d.getDate()-1);while(s.has(day(d))){n++;d.setDate(d.getDate()-1)}return n};
+const count=(u,p)=>{const t=day(),w=day(new Date(Date.now()-6*864e5));return new Set((u.log||[]).filter(x=>p=="all"||(p=="day"?x.startsWith(t):x.split("|")[0]>=w))).size};
+let lb="week";
 const prog=c=>{const n=(c.lessons||[]).length,d=me().done||[];return{n,d:(c.lessons||[]).filter((_,i)=>d.includes(key(c.id,i))).length}};
 
 /* ---------- data ---------- */
@@ -104,12 +115,14 @@ onAuthStateChanged(auth,u=>{user=u;unsubs.forEach(f=>f());unsubs=[];
 
 /* ---------- views ---------- */
 const nav=()=>`<div class="nav"><div class="logo"><i>✦</i>${esc(site.name||"Nibble")}</div>
- <button class="btn ${view=="home"||view=="course"?"on":""}" data-a="go" data-v="home">Courses</button>
- <button class="btn ${view=="people"?"on":""}" data-a="go" data-v="people">Community</button>
- <button class="btn ${view=="me"?"on":""}" data-a="go" data-v="me">${esc(me().emoji||"🙂")} Me</button>
+ <button class="btn ${view=="home"||view=="course"?"on":""}" data-a="go" data-v="home">courses</button>
+ <button class="btn ${view=="people"?"on":""}" data-a="go" data-v="people">community</button>
+ <button class="btn ${view=="me"?"on":""}" data-a="go" data-v="me">${esc(me().emoji||"🙂")} me</button>
  ${isAdmin()?`<button class="btn p" data-a="new">+ Course</button><button class="btn" data-a="site">⚙ Site</button>`:""}</div>`;
 
-const authView=()=>{const s=mode=="up";return`<div class="auth box"><div class="logo"><i>✦</i>${esc(site.name||"Nibble")}</div>
+const LAND=`<div class="land"><div class="logo" style="justify-content:center;margin-bottom:28px"><i>✦</i>nibble</div><h1>learn with friends.</h1><p>short courses, a friendly leaderboard, and streaks that keep you coming back.</p><a class="btn p" href="#join">start learning free</a></div>
+<div class="feat"><div><b>short courses</b><span class="meta">bite-sized lessons you can finish in minutes</span></div><div><b>leaderboard</b><span class="meta">see your rank today, this week, all time</span></div><div><b>streaks</b><span class="meta">keep your daily learning chain alive</span></div><div><b>community</b><span class="meta">chat under every course</span></div><div><b>progress</b><span class="meta">watch every course bar fill up</span></div><div><b>make it yours</b><span class="meta">pick any color, font and vibe</span></div></div>`;
+const authView=()=>{const s=mode=="up";return LAND+`<div class="auth box" id="join"><div class="logo"><i>✦</i>${esc(site.name||"Nibble")}</div>
  <h2 style="margin:16px 0 4px">${s?"Create your account":"Welcome back"}</h2><p class="meta">Short courses you can finish in minutes.</p>
  <form id="authF">${s?`<div class="f"><label for="nm">Name</label><input id="nm" required maxlength="24"></div>`:""}
  <div class="f"><label for="em">Email</label><input id="em" type="email" required></div>
@@ -122,8 +135,8 @@ function home(){const vis=courses.filter(c=>!c.draft||isAdmin());
  const cats=["All",...new Set(vis.map(c=>c.category).filter(Boolean))],list=vis.filter(c=>filter=="All"||c.category==filter);
  const tot=vis.reduce((a,c)=>a+prog(c).n,0),dn=vis.reduce((a,c)=>a+prog(c).d,0);
  return`${site.banner?`<div class="banner">${esc(site.banner)}</div>`:""}
- <div class="hero"><h1>${esc(site.tagline||"Learn something new in a few minutes")}</h1>
- <p>Hi ${esc(me().name||"there")}! ${dn} of ${tot} lessons done.</p><div class="bar" style="margin-top:14px;max-width:340px"><i style="width:${tot?dn/tot*100:0}%"></i></div></div>
+ <div class="hero"><h1>${esc(site.tagline||"learn something new, together.")}</h1>
+ <p>hey ${esc(me().name||"there")} 👋</p><div class="tiles"><div class="tile"><b>🔥 ${streak(me())}</b><span>day streak</span></div><div class="tile"><b>${count(me(),"week")}</b><span>lessons this week</span></div><div class="tile"><b>${dn}/${tot}</b><span>total done</span></div></div></div>
  <div class="chips">${cats.map(c=>`<button class="btn s ${c==filter?"on":""}" data-a="cat" data-v="${esc(c)}">${esc(c)}</button>`).join("")}</div>
  ${list.length?`<div class="grid">${list.map(c=>{const p=prog(c);return`<button class="card" style="--c:${esc(c.color||"")}" data-a="open" data-v="${c.id}">
   <div class="cov"><span>${esc(c.emoji||"✨")}</span>${c.draft?"<small>Draft</small>":c.featured?"<small>★ Featured</small>":""}</div>
@@ -148,8 +161,8 @@ function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class=
  ${cms.map(x=>`<div class="cm"><div class="av">${esc(x.emoji)}</div><div style="flex:1"><b>${esc(x.name)}</b> <span class="meta">${x.at?new Date(x.at).toLocaleDateString():""}</span><div>${esc(x.text)}</div></div>
  ${isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delc" data-v="${x.id}">✕</button>`:""}</div>`).join("")||'<p class="meta">Be the first to say something.</p>'}</div>`}`}
 
-function people(){const top=[...users].filter(u=>u.name).sort((a,b)=>(b.done||[]).length-(a.done||[]).length).slice(0,10);
- return`<div class="two"><div class="box"><h3>Top learners</h3>${top.map((u,i)=>`<div class="lb"><b>${i+1}</b><div class="av">${esc(u.emoji||"🙂")}</div><div style="flex:1"><b>${esc(u.name)}</b><div class="meta">${esc(u.bio||"")}</div></div><b>${(u.done||[]).length} ✓</b></div>`).join("")}</div>
+function people(){const top=[...users].filter(u=>u.name).sort((a,b)=>count(b,lb)-count(a,lb)).slice(0,10);
+ return`<div class="two"><div class="box"><h3>leaderboard</h3><div class="row" style="margin:10px 0">${[["day","today"],["week","this week"],["all","all time"]].map(([k,n])=>`<button class="btn s ${k==lb?"on":""}" data-a="lb" data-v="${k}">${n}</button>`).join("")}</div>${top.map((u,i)=>`<div class="lb"><b>${i+1}</b><div class="av">${esc(u.emoji||"🙂")}</div><div style="flex:1"><b>${esc(u.name)}</b><div class="meta">${esc(u.bio||"")}</div></div><span class="meta">🔥${streak(u)}</span><b>${count(u,lb)} ✓</b></div>`).join("")}</div>
  <div class="box"><h3>Latest chatter</h3>${comments.slice(0,12).map(x=>{const c=courses.find(y=>y.id==x.cid);return`<div class="cm"><div class="av">${esc(x.emoji)}</div><div><b>${esc(x.name)}</b> <span class="meta">on ${esc(c?.title||"a course")}</span><div>${esc(x.text)}</div></div></div>`}).join("")||'<p class="meta">Nothing yet.</p>'}</div></div>`}
 
 function profile(){const m=me();return`<div class="two"><div class="box"><h3>Your profile</h3><form id="meF" style="margin-top:12px">
@@ -209,7 +222,8 @@ const A={
  edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({t:l.t,b:l.b,l:l.l||""}))};modal="edit";render()},
  addl:()=>{readEdit();edit.lessons.push({t:"",b:"",l:""});render()},rm:v=>{readEdit();edit.lessons.splice(+v,1);render()},
  mv:v=>{readEdit();const[i,d]=v.split(":").map(Number),j=i+d,L=edit.lessons;if(L[j])[L[i],L[j]]=[L[j],L[i]];render()},
- done:()=>{const k=key(cid,li),d=me().done||[];saveMe({done:d.includes(k)?arrayRemove(k):arrayUnion(k)});if(!d.includes(k))toast("Nice work! 🎉")},
+ done:()=>{const k=key(cid,li),has=(me().done||[]).includes(k);saveMe(has?{done:arrayRemove(k)}:{done:arrayUnion(k),log:arrayUnion(day()+"|"+k)});if(!has)toast("nice work! 🎉")},
+ lb:v=>{lb=v;render()},
  like:()=>{const id=cid+"_"+user.uid;likes.some(x=>x.id==id)?deleteDoc(doc(db,"likes",id)):setDoc(doc(db,"likes",id),{c:cid,u:user.uid})},
  delc:v=>deleteDoc(doc(db,"comments",v)),
  preset:v=>{const t=THEMES[v];Object.assign(theme,{brand:t[0],bg:t[1],card:t[2],ink:t[3]});applyTheme();render()},
