@@ -50,6 +50,13 @@ textarea{min-height:80px;resize:vertical}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:start center;padding:16px;overflow:auto;z-index:5}
 .sheet{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;width:100%;max-width:600px;margin:3vh 0}
 .sw{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:1px}
+.les:disabled{opacity:.45;cursor:default}ul{padding-left:20px;margin:6px 0}
+.board{display:grid;grid-template-columns:repeat(8,1fr);max-width:380px;border:1px solid var(--line)}
+.sq{aspect-ratio:1;border:0;padding:0;border-radius:0;background:color-mix(in srgb,var(--ink) 12%,var(--card));display:grid;place-items:center;font-size:clamp(20px,6.5vw,36px)}
+.sq.dk{background:color-mix(in srgb,var(--ink) 30%,var(--card))}.sq:hover{outline:2px solid var(--brand);outline-offset:-2px}.sq.bad{background:#e5646f77}
+.pc{color:var(--brand);text-shadow:0 0 3px var(--bg);line-height:1}
+textarea.code{font-family:'JetBrains Mono',monospace;font-size:.85rem;min-height:170px;white-space:pre;tab-size:4}
+pre.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:8px 0 0;font:.85rem 'JetBrains Mono',monospace;white-space:pre-wrap;min-height:44px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:var(--radius);font-size:.88rem;z-index:9}
 </style>
 </head>
@@ -69,6 +76,8 @@ const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(auth.app);
 const TOPICS=["Coding","Politics","News","Chess","Writing","Science","History","Money"],LEVELS=["Beginner","Intermediate","Advanced"];
 const THEMES={Mono:["#ffffff","#0a0a0b","#131315","#ececec"],Paper:["#111111","#f3f3f4","#ffffff","#111111"],Pink:["#e891b4","#fff5f9","#ffffff","#3a2230"],Blue:["#7fa9e0","#f3f8ff","#ffffff","#1d2f47"],Green:["#78c19a","#f2fbf6","#ffffff","#1c3a2b"]};
 const FONTS={Clean:"'Inter',sans-serif",Tech:"'JetBrains Mono',monospace"};
+let qz={k:"",ans:{},sub:false};
+let ch=null,run={k:"",out:"",ok:null,busy:false};
 let user,courses=[],users=[],posts=[],groups=[],msgs=[],likes=[],site={},view="home",tab="feed",gid=null,openPost=null,cid=null,li=0,modal=null,edit=null,filter="For you",mode="login",picked=[],unsubs=[];
 let theme={brand:"#ffffff",bg:"#0a0a0b",card:"#131315",ink:"#ececec",radius:4,font:"Clean"};
 try{Object.assign(theme,JSON.parse(localStorage.getItem("theme3")||"{}"))}catch{}
@@ -89,9 +98,37 @@ const day=d=>{d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).
 const streak=u=>{const s=new Set((u.log||[]).map(x=>x.split("|")[0]));let n=0,d=new Date();if(!s.has(day(d)))d.setDate(d.getDate()-1);while(s.has(day(d))){n++;d.setDate(d.getDate()-1)}return n};
 const age=b=>{const d=new Date(b),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))a--;return a};
 const ago=t=>{const s=(Date.now()-t)/1000;return s<60?"now":s<3600?Math.floor(s/60)+"m":s<86400?Math.floor(s/3600)+"h":Math.floor(s/86400)+"d"};
-const prog=c=>{const L=c.lessons||[],d=me().done||[];return{n:L.length,d:L.filter((_,i)=>d.includes(key(c.id,i))).length}};
+const hasQ=c=>(c.quiz||[]).length>0;
+const prog=c=>{const L=c.lessons||[],m=me(),d=m.done||[],q=hasQ(c);return{n:L.length+(q?1:0),d:L.filter((_,i)=>d.includes(key(c.id,i))).length+(q&&(m.passed||[]).includes(c.id)?1:0)}};
+const locked=(c,i)=>!isAdmin()&&!(c.lessons||[]).slice(0,i).every((_,j)=>(me().done||[]).includes(key(c.id,j)));
 const score=c=>{const m=me(),k=(c.category||"").toLowerCase(),p=prog(c);return((m.interests||[]).some(i=>i.toLowerCase()==k)?6:0)+((m.w||{})[c.category]||0)+(c.featured?1:0)-(p.n&&p.d==p.n?20:0)};
 const likeN=id=>likes.filter(l=>l.c==id).length,liked=id=>likes.some(l=>l.id==id+"_"+user.uid);
+const GL={king:"\u265A",queen:"\u265B",rook:"\u265C",bishop:"\u265D",knight:"\u265E",pawn:"\u265F"};
+const bl=()=>({t:"",b:"",l:"",type:"text",piece:"rook",rounds:4,code:"",expect:""});
+const gated=l=>l.type=="chess"||(l.type=="code"&&l.expect);
+const complete=()=>{if(!(me().done||[]).includes(key(cid,li)))A.done()};
+const legal=(p,a,b)=>{const dx=(b&7)-(a&7),dy=(b>>3)-(a>>3),x=Math.abs(dx),y=Math.abs(dy);
+ return !!({rook:!dx||!dy,bishop:x==y,queen:!dx||!dy||x==y,knight:x+y==3&&x&&y,king:Math.max(x,y)==1,pawn:!dx&&(dy==-1||(dy==-2&&(a>>3)==6))}[p])&&a!=b};
+const newPos=p=>{let s;do{s=Math.floor(Math.random()*64)}while(p=="pawn"&&((s>>3)<1||(s>>3)>6));return s};
+const initCh=l=>{ch={k:cid+":"+li,p:l.piece||"rook",n:+l.rounds||4,r:0,s:0,msg:"",bad:-1};ch.s=newPos(ch.p)};
+let pyP=null;
+const getPy=()=>pyP||(pyP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+ s.onload=()=>loadPyodide().then(res,e=>{pyP=null;rej(e)});s.onerror=()=>{pyP=null;rej(new Error("Could not load Python. Check your connection."))};document.head.append(s)}));
+const board=()=>{let h='<div class="board">';for(let i=0;i<64;i++){const r=i>>3,f=i&7;h+=`<button class="sq ${(r+f)%2?"dk":""} ${i==ch.bad?"bad":""}" data-a="sq" data-v="${i}" aria-label="${"abcdefgh"[f]}${8-r}">${i==ch.s?`<span class="pc">${GL[ch.p]}\uFE0E</span>`:""}</button>`}return h+"</div>"};
+const chessBox=()=>{if(!ch||ch.k!=cid+":"+li)initCh(courses.find(x=>x.id==cid).lessons[li]);
+ return`<div style="margin-top:12px"><div class="row" style="margin-bottom:8px"><span class="k">Round ${Math.min(ch.r+1,ch.n)} of ${ch.n}</span><span>Click a square the ${ch.p} can move to.</span></div>${board()}<p class="k" style="min-height:1.4em" aria-live="polite">${esc(ch.msg)}</p>${ch.r>=ch.n?`<button class="btn" data-a="again">Practice again</button>`:""}</div>`};
+const codeBox=l=>{const id="cd"+cid+"_"+li,mine=run.k==cid+":"+li;
+ return`<div class="f" style="margin-top:12px"><label for="${id}">Try it</label><textarea id="${id}" class="code" spellcheck="false">${esc(l.code||"")}</textarea></div>
+ <div class="row"><button class="btn p" data-a="run">Run code</button><span class="k">${run.busy&&mine?"running (the first run loads Python, give it a few seconds)":mine&&run.ok===true?"correct":mine&&run.ok===false?"not quite, try again":""}</span></div><pre class="out" aria-live="polite">${mine?esc(run.out):""}</pre>`};
+const fmt=t=>{let h="",code=[],ul=[];const fl=()=>{if(code.length){h+=`<pre class="out">${esc(code.join("\n"))}</pre>`;code=[]}if(ul.length){h+=`<ul>${ul.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;ul=[]}};
+ for(const ln of(t||"").split("\n")){if(!ln.trim())continue;if(ln.startsWith("> ")){if(ul.length)fl();code.push(ln.slice(2))}else if(ln.startsWith("- ")){if(code.length)fl();ul.push(ln.slice(2))}else{fl();h+=ln.startsWith("## ")?`<h3 style="margin:16px 0 4px">${esc(ln.slice(3))}</h3>`:`<p>${esc(ln)}</p>`}}fl();return h};
+const quizBox=(c,passed)=>{const Q=c.quiz;if(qz.k!=c.id)qz={k:c.id,ans:{},sub:false};
+ const need=Math.ceil(Q.length*(c.pass||70)/100),sc=Q.filter((x,i)=>qz.ans[i]===x.a).length,ok=qz.sub&&sc>=need;
+ return`<h2>Final quiz</h2><p>Answer all ${Q.length} questions. You need ${need} correct to pass${passed?". You have already passed this quiz.":"."}</p>
+ ${Q.map((x,i)=>`<fieldset style="border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;padding:8px 14px"><legend style="padding:0 6px"><b>${i+1}. ${esc(x.q)}</b></legend>
+ ${x.o.map((o,j)=>`<label style="display:block;padding:3px 0"><input type="radio" name="q${i}" data-a="pick" data-v="${i}:${j}" ${qz.ans[i]===j?"checked":""}> ${esc(o)}${qz.sub&&qz.ans[i]===j?(j===x.a?" (correct)":" (incorrect)"):""}</label>`).join("")}</fieldset>`).join("")}
+ ${qz.sub?`<p><b>Score: ${sc} of ${Q.length}.</b> ${ok?"You passed.":"Not yet. Review the lessons and try again."}</p>`:""}
+ <div class="row">${ok?"":`<button class="btn p" data-a="submitq" ${Object.keys(qz.ans).length<Q.length||qz.sub?"disabled":""}>Submit answers</button>`}${qz.sub&&!ok?`<button class="btn" data-a="retryq">Try again</button>`:""}</div>`};
 const av=(u,s)=>u?.pfp?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u?.name||"?")[0]||"?").toUpperCase()}</div>`;
 
 /* ---------- data ---------- */
@@ -128,19 +165,21 @@ function home(){const vis=courses.filter(c=>!c.draft||isAdmin()),m=me();
  <div class="tiles" style="max-width:520px"><div class="tile"><b>${streak(m)}d</b><span>streak</span></div><div class="tile"><b>${m.coins||0}</b><span>coins</span></div><div class="tile"><b>${(m.done||[]).length}</b><span>lessons done</span></div></div>
  <div class="chips">${cats.map(c=>`<button class="btn s ${c==filter?"on":""}" data-a="cat" data-v="${esc(c)}">${esc(c)}</button>`).join("")}</div>
  ${list.length?`<div class="grid">${list.map(c=>{const p=prog(c);return`<button class="card" data-a="open" data-v="${c.id}"><span class="k">${esc(c.category||"General")} / ${esc(c.level||"")}${c.draft?" / draft":c.featured?" / featured":""}</span>
-  <h3>${esc(c.title)}</h3><p>${esc(c.blurb)}</p><span class="k">${esc(c.mins||"?")} min / ${p.n} lessons / ${p.d} done</span><div class="bar"><i style="width:${p.n?p.d/p.n*100:0}%"></i></div></button>`}).join("")}</div>`
- :`<div class="box k">No courses yet. ${isAdmin()?`<button class="btn p" data-a="seed">Add 2 starter courses</button>`:""}</div>`}
+  <h3>${esc(c.title)}</h3><p>${esc(c.blurb)}</p><span class="k">${esc(c.mins||"?")} min / ${p.n} steps / ${p.d} done</span><div class="bar"><i style="width:${p.n?p.d/p.n*100:0}%"></i></div></button>`}).join("")}</div>`
+ :`<div class="box k">No courses yet. ${isAdmin()?`<button class="btn p" data-a="seed">Add Python + Chess courses</button>`:""}</div>`}
  <div class="box row"><div><h3>Got an idea?</h3><span class="k">Suggest a course you want to see.</span></div><a class="btn p sp" href="${esc(site.formUrl||FORM_URL)}" target="_blank" rel="noopener" style="text-decoration:none">Suggest a course</a></div>`}
 
 function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class="btn" data-a="go" data-v="home">Back</button>`;
- const ls=c.lessons||[],l=ls[li]||{t:"",b:""},d=me().done||[];
+ const ls=c.lessons||[],q=hasQ(c),isQ=q&&li>=ls.length,l=ls[li]||{t:"",b:""},d=me().done||[],passed=(me().passed||[]).includes(c.id),max=q?ls.length:ls.length-1,dn=!isQ&&d.includes(key(c.id,li));
  return`<div class="row"><button class="btn" data-a="go" data-v="home">Back</button>${isAdmin()?`<button class="btn sp" data-a="edit" data-v="${c.id}">Edit course</button>`:""}</div>
  <div class="box"><span class="k">${esc(c.category||"")} / ${esc(c.level||"")} / ${esc(c.mins||"?")} min</span><h1 style="margin:6px 0">${esc(c.title)}</h1><span style="color:var(--muted)">${esc(c.blurb)}</span></div>
- <div class="two"><div>${ls.map((x,i)=>`<button class="les ${i==li?"cur":""}" data-a="les" data-v="${i}"><span class="dot ${d.includes(key(c.id,i))?"y":""}">${d.includes(key(c.id,i))?"ok":i+1}</span>${esc(x.t)}</button>`).join("")}</div>
- <div class="box" style="margin-top:8px"><h2>${esc(l.t)}</h2>${(l.b||"").split("\n").filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join("")}
+ <div class="two"><div>${ls.map((x,i)=>{const lk=locked(c,i),y=d.includes(key(c.id,i));return`<button class="les ${i==li?"cur":""}" data-a="les" data-v="${i}" ${lk?"disabled":""}><span class="dot ${y?"y":""}">${y?"ok":lk?"-":i+1}</span>${esc(x.t)}</button>`}).join("")}
+ ${q?`<button class="les ${isQ?"cur":""}" data-a="les" data-v="${ls.length}" ${locked(c,ls.length)?"disabled":""}><span class="dot ${passed?"y":""}">${passed?"ok":locked(c,ls.length)?"-":"Q"}</span>Final quiz</button>`:""}
+ <p class="k">Finish each step to unlock the next.</p></div>
+ <div class="box" style="margin-top:8px">${isQ?quizBox(c,passed):`<h2>${esc(l.t)}</h2>${fmt(l.b)}${l.type=="code"?codeBox(l):l.type=="chess"?chessBox():""}
  ${l.l?`<p><a class="btn s" href="${esc(l.l)}" target="_blank" rel="noopener" style="text-decoration:none">Open resource</a></p>`:""}
- <div class="row" style="margin-top:14px"><button class="btn p" data-a="done">${d.includes(key(c.id,li))?"Undo":"Mark as done (+10 coins)"}</button>
- <button class="btn s" data-a="les" data-v="${li-1}" ${li?"":"disabled"}>Prev</button><button class="btn s" data-a="les" data-v="${li+1}" ${li<ls.length-1?"":"disabled"}>Next</button></div></div></div>`}
+ <div class="row" style="margin-top:14px">${gated(l)?`<span class="k">${dn?"Lesson completed":"Finish the challenge above to complete this lesson."}</span>`:`<button class="btn p" data-a="done">${dn?"Undo":"Mark as done (+10 coins)"}</button>`}
+ <button class="btn s" data-a="les" data-v="${li-1}" ${li?"":"disabled"}>Prev</button><button class="btn s" data-a="les" data-v="${li+1}" ${li<max&&(dn||isAdmin())?"":"disabled"}>Next</button></div>`}</div></div>`}
 
 function postHtml(p){const u=users.find(x=>x.id==p.uid),rs=posts.filter(x=>x.parent==p.id).reverse();
  const who=(w,t)=>`<b>${esc(w?.name||"user")}</b> <span class="k">${esc(w?.pronouns||"")} ${w?.pronouns?"/":""} ${ago(t)}</span>`,del=x=>isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delp" data-v="${x.id}">Delete</button>`:"";
@@ -185,16 +224,27 @@ function editor(){const e=edit;return`<div class="modal"><div class="sheet"><div
  <label><input id="ef" type="checkbox" ${e.featured?"checked":""}> Featured</label> &nbsp; <label><input id="ed" type="checkbox" ${e.draft?"checked":""}> Draft (only you see it)</label>
  <h3 style="margin:16px 0 4px">Lessons</h3>
  ${e.lessons.map((l,i)=>`<div class="box"><div class="row"><b>Lesson ${i+1}</b><span class="sp"></span><button type="button" class="btn s" data-a="mv" data-v="${i}:-1">Up</button><button type="button" class="btn s" data-a="mv" data-v="${i}:1">Down</button><button type="button" class="btn s d" data-a="rm" data-v="${i}">Remove</button></div>
- <div class="f"><label for="lt${i}">Title</label><input id="lt${i}" value="${esc(l.t)}"></div><div class="f"><label for="lb${i}">Text (new line = new paragraph)</label><textarea id="lb${i}">${esc(l.b)}</textarea></div>
- <div class="f"><label for="ll${i}">Link (optional)</label><input id="ll${i}" value="${esc(l.l)}"></div></div>`).join("")}
+ <div class="f"><label for="lt${i}">Title</label><input id="lt${i}" value="${esc(l.t)}"></div><div class="f"><label for="lb${i}">Text (new line = paragraph. Start a line with "## " for a heading, "- " for a bullet, "> " for a code line)</label><textarea id="lb${i}">${esc(l.b)}</textarea></div>
+ <div class="f"><label for="ll${i}">Link (optional)</label><input id="ll${i}" value="${esc(l.l)}"></div>
+ <div class="two" style="gap:10px"><div class="f"><label for="ly${i}">Lesson type</label><select id="ly${i}">${["text","code","chess"].map(t=>`<option ${t==l.type?"selected":""}>${t}</option>`).join("")}</select></div>
+ <div class="f"><label for="lp${i}">Chess piece (chess type)</label><select id="lp${i}">${Object.keys(GL).map(t=>`<option ${t==l.piece?"selected":""}>${t}</option>`).join("")}</select></div></div>
+ <div class="f"><label for="lr${i}">Rounds (chess type)</label><input id="lr${i}" type="number" min="1" max="10" value="${esc(l.rounds)}"></div>
+ <div class="f"><label for="lc${i}">Starter code (code type)</label><textarea id="lc${i}" class="code">${esc(l.code)}</textarea></div>
+ <div class="f"><label for="lx${i}">Expected output (code type, optional: turns it into a challenge)</label><input id="lx${i}" value="${esc(l.expect)}"></div></div>`).join("")}
  <p><button type="button" class="btn" data-a="addl">Add lesson</button></p>
+ <h3 style="margin:18px 0 4px">Final quiz</h3><div class="f"><label for="ep">Pass mark (percent correct)</label><input id="ep" type="number" min="1" max="100" value="${esc(e.pass)}"></div>
+ ${e.quiz.map((x,i)=>`<div class="box"><div class="row"><b>Question ${i+1}</b><span class="sp"></span><button type="button" class="btn s d" data-a="rmq" data-v="${i}">Remove</button></div>
+ <div class="f"><label for="qq${i}">Question</label><input id="qq${i}" value="${esc(x.q)}"></div>
+ ${[0,1,2,3].map(j=>`<div class="f"><label for="qo${i}_${j}">Option ${j+1}</label><input id="qo${i}_${j}" value="${esc(x.o[j]||"")}"></div>`).join("")}
+ <div class="f"><label for="qa${i}">Correct option</label><select id="qa${i}">${[0,1,2,3].map(j=>`<option value="${j}" ${j==x.a?"selected":""}>Option ${j+1}</option>`).join("")}</select></div></div>`).join("")}
+ <p><button type="button" class="btn" data-a="addq">Add question</button></p>
  <div class="row"><button class="btn p">Save for everyone</button>${e.id?`<button type="button" class="btn d sp" data-a="delcourse">Delete course</button>`:""}</div></form></div></div>`}
 
 const siteModal=()=>`<div class="modal"><div class="sheet"><div class="row"><h2>Site settings</h2><button class="btn s sp" data-a="x">Close</button></div>
  <form id="stF" style="margin-top:12px"><div class="f"><label for="sn">Site name</label><input id="sn" value="${esc(site.name||"curiosity maxxing")}"></div>
  <div class="f"><label for="sg">Homepage headline</label><input id="sg" value="${esc(site.tagline||"")}"></div>
  <div class="f"><label for="sb">Announcement banner (empty = hidden)</label><input id="sb" value="${esc(site.banner||"")}"></div>
- <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><button class="btn p">Save</button></form></div></div>`;
+ <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><div class="row"><button class="btn p">Save</button><button type="button" class="btn sp" data-a="seed">Add Python + Chess starter courses</button></div></form></div></div>`;
 
 function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=="checkbox"?el.checked:el.value);
  const fid=document.activeElement?.id,pos=document.activeElement?.selectionStart;
@@ -206,16 +256,22 @@ function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=
 /* ---------- actions ---------- */
 function readEdit(){const g=i=>document.getElementById(i);if(!g("et"))return;
  Object.assign(edit,{title:g("et").value,category:g("ec").value,blurb:g("eb").value,level:g("el").value,mins:g("em").value,order:g("er").value,featured:g("ef").checked,draft:g("ed").checked});
- edit.lessons=edit.lessons.map((l,i)=>({t:g("lt"+i).value,b:g("lb"+i).value,l:g("ll"+i).value}))}
-const blank=()=>({title:"",category:"",blurb:"",level:"Beginner",mins:5,order:courses.length+1,featured:false,draft:false,lessons:[{t:"",b:"",l:""}]});
+ edit.lessons=edit.lessons.map((l,i)=>({t:g("lt"+i).value,b:g("lb"+i).value,l:g("ll"+i).value,type:g("ly"+i).value,piece:g("lp"+i).value,rounds:+g("lr"+i).value||4,code:g("lc"+i).value,expect:g("lx"+i).value}));
+ edit.pass=+g("ep").value||70;edit.quiz=edit.quiz.map((x,i)=>({q:g("qq"+i).value,o:[0,1,2,3].map(j=>g("qo"+i+"_"+j).value),a:+g("qa"+i).value}))}
+const blank=()=>({title:"",category:"",blurb:"",level:"Beginner",mins:5,order:courses.length+1,featured:false,draft:false,lessons:[bl()],quiz:[],pass:70});
 const A={
  go:v=>{view=v;modal=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
  topic:v=>{picked=picked.includes(v)?picked.filter(x=>x!=v):[...picked,v];render()},
- open:v=>{const c=courses.find(x=>x.id==v);cid=v;li=0;view="course";saveMe({w:{[c.category||"General"]:increment(1)}});render();scrollTo(0,0)},
- les:v=>{if(+v>=0)li=+v;render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";render()},
+ open:v=>{const c=courses.find(x=>x.id==v);cid=v;view="course";qz={k:"",ans:{},sub:false};{const dd=me().done||[],L=c.lessons||[],k=L.findIndex((_,i)=>!dd.includes(key(v,i)));li=k<0?(hasQ(c)&&!(me().passed||[]).includes(v)?L.length:0):k}saveMe({w:{[c.category||"General"]:increment(1)}});render();scrollTo(0,0)},
+ les:v=>{const c=courses.find(x=>x.id==cid);v=+v;if(v<0)return;if(locked(c,v))return toast("Finish the earlier steps first");li=v;qz={k:"",ans:{},sub:false};render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";render()},
  new:()=>{edit=blank();modal="edit";render()},
- edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({t:l.t,b:l.b,l:l.l||""}))};modal="edit";render()},
- addl:()=>{readEdit();edit.lessons.push({t:"",b:"",l:""});render()},rm:v=>{readEdit();edit.lessons.splice(+v,1);render()},
+ edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({...bl(),...l})),quiz:(c.quiz||[]).map(x=>({q:x.q,o:[...x.o],a:x.a})),pass:c.pass||70};modal="edit";render()},
+ addq:()=>{readEdit();edit.quiz.push({q:"",o:["","","",""],a:0});render()},rmq:v=>{readEdit();edit.quiz.splice(+v,1);render()},
+ pick:v=>{if(qz.sub)return;const[i,j]=v.split(":").map(Number);qz.ans[i]=j;render()},
+ submitq:()=>{const c=courses.find(x=>x.id==cid),Q=c.quiz,sc=Q.filter((x,i)=>qz.ans[i]===x.a).length,need=Math.ceil(Q.length*(c.pass||70)/100);qz.sub=true;
+  if(sc>=need){if(!(me().passed||[]).includes(cid)){saveMe({passed:arrayUnion(cid),coins:increment(50)});toast("Quiz passed. +50 coins")}}else toast("Not quite: "+sc+" of "+Q.length);render()},
+ retryq:()=>{qz={k:cid,ans:{},sub:false};render()},
+ addl:()=>{readEdit();edit.lessons.push(bl());render()},rm:v=>{readEdit();edit.lessons.splice(+v,1);render()},
  mv:v=>{readEdit();const[i,d]=v.split(":").map(Number),j=i+d,L=edit.lessons;if(L[j])[L[i],L[j]]=[L[j],L[i]];render()},
  done:()=>{const k=key(cid,li),m=me(),L=m.log||[];if((m.done||[]).includes(k))return saveMe({done:arrayRemove(k)});
   const first=!L.some(x=>x.endsWith("|"+k)),bonus=L.some(x=>x.startsWith(day()))?0:20,c=first?10+bonus:0;
@@ -225,10 +281,45 @@ const A={
  grp:v=>{gid=v;render()},delg:async v=>{if(confirm("Delete this group?")){await deleteDoc(doc(db,"groups",v));gid=null}},
  preset:v=>{const t=THEMES[v];Object.assign(theme,{brand:t[0],bg:t[1],card:t[2],ink:t[3]});applyTheme();render()},
  delcourse:async()=>{if(confirm("Delete this course for everyone?")){await deleteDoc(doc(db,"courses",edit.id));modal=null;view="home";render()}},
- seed:async()=>{const S=[
-  {title:"Reading simple Python",category:"Coding",blurb:"Understand the phrases you see in beginner code.",level:"Beginner",mins:6,order:1,lessons:[{t:"print and variables",b:"print(\"hi\") shows the text hi on screen.\nname = \"Sam\" stores a value so you can use it later.\nA variable is just a label for a value."},{t:"if and for",b:"if age >= 18: runs the lines under it only when the condition is true.\nfor i in range(3): repeats the lines under it 3 times.\nIndentation (the spaces) shows which lines belong together."}]},
-  {title:"The two main US parties",category:"Politics",blurb:"A neutral intro to Republicans and Democrats.",level:"Beginner",mins:7,order:2,lessons:[{t:"Two dominant parties",b:"The US has two major parties: the Democratic Party and the Republican Party.\nMost elected officials belong to one of them. Third parties exist but rarely win national seats."},{t:"What each tends to emphasize",b:"Democrats generally favor a larger federal role in areas like healthcare and support more regulation and social programs.\nRepublicans generally favor a smaller federal government, lower taxes, and more room for states and private businesses.\nBoth parties contain a range of views, and individual members often disagree."},{t:"How to learn more",b:"Read each party's official platform in its own words.\nCompare coverage of the same story from several news outlets."}]}];
-  for(const s of S)await addDoc(collection(db,"courses"),s);toast("Added")}};
+ run:async()=>{const k=cid+":"+li,l=courses.find(x=>x.id==cid).lessons[li],code=document.getElementById("cd"+cid+"_"+li).value;
+  run={k,out:"",ok:null,busy:true};render();const out=[];
+  try{const p=await getPy();p.setStdout({batched:t=>out.push(t)});p.setStderr({batched:t=>out.push(t)});await p.runPythonAsync(code,{globals:p.globals.get("dict")()})}
+  catch(e){out.push(String(e.message||e).trim().split("\n").slice(-2).join("\n"))}
+  const txt=out.join("\n");run={k,out:txt||"(no output)",ok:l.expect?txt.trim()==l.expect.trim():null,busy:false};if(run.ok)complete();render()},
+ sq:v=>{v=+v;if(!ch||ch.r>=ch.n||v==ch.s)return;
+  if(legal(ch.p,ch.s,v)){ch.r++;ch.bad=-1;if(ch.r>=ch.n){ch.msg="All rounds complete. Nice.";complete()}else{ch.msg="Correct. Next round.";ch.s=newPos(ch.p)}}
+  else{ch.bad=v;ch.msg="That piece can't move there. Try again."}render()},
+ again:()=>{initCh(courses.find(x=>x.id==cid).lessons[li]);render()},
+ seed:async()=>{const C=(t,b,piece,n)=>({t,b,type:"chess",piece,rounds:n,l:"",code:"",expect:""}),P=(t,b,code,expect)=>({t,b,type:"code",code,expect:expect||"",l:"",piece:"rook",rounds:4}),T=(t,b)=>({t,b,type:"text",l:"",piece:"rook",rounds:4,code:"",expect:""}),Q=(q,o,a)=>({q,o,a});
+  const S=[{title:"Basic functions in Python",category:"Coding",blurb:"Write and run real Python, then prove it in a quiz.",level:"Beginner",mins:25,order:1,pass:70,lessons:[
+   P("What is a function?","A function is a named block of code that does one job. Instead of rewriting the same steps again and again, you give the steps a name and call them whenever you need them.\n## Calling a function\nYou call a function by writing its name followed by brackets. Whatever you put inside the brackets is called an argument. It is the input you hand to the function.\n> print(\"hello\")\nHere print is the function and \"hello\" is the argument.\n## Why functions matter\n- They save you from repeating code\n- They give steps a clear name, so code reads like a sentence\n- You can fix a bug in one place instead of ten\nPress Run, then change the text and run it again.","print(\"hello\")\nprint(\"functions are reusable\")"),
+   P("Built-in functions","Python ships with many ready-made functions called built-ins. You do not have to write them yourself.\n## The ones you will use constantly\n- print(x) shows x on screen\n- len(x) counts the characters or items in x\n- type(x) tells you what kind of value x is\n- max(a, b, c) and min(a, b, c) return the biggest and smallest value\n- round(x) rounds a number to the nearest whole number\n## Functions that give a value back\nSome functions hand a value back, and you can store it in a variable:\n> size = len(\"curious\")\n> print(size)\nRun the code below. Then add a line that prints the smallest of 4, 17 and 9.","word = \"curious\"\nprint(len(word))\nprint(type(word))\nprint(round(3.14159))\nprint(max(2, 8, 5))"),
+   P("Make your own function with def","You can create your own functions with the def keyword.\n## The anatomy of a function\n> def greet(name):\n>     return \"hi \" + name\n- def tells Python you are defining a function\n- greet is the name you choose\n- name inside the brackets is a parameter, a placeholder for the input\n- the colon ends the line, and the indented lines below are the function's body\n- return sends a result back to whoever called the function\n## Parameters vs arguments\nA parameter is the placeholder in the definition. An argument is the real value you pass in when you call it. In greet(\"Sam\"), the argument \"Sam\" goes into the parameter name.\n## Indentation matters\nPython uses spaces at the start of a line to know which lines belong inside the function. Use four spaces. Run the example, then change the name.","def greet(name):\n    return \"hi \" + name\n\nprint(greet(\"Sam\"))\nprint(greet(\"Ana\"))"),
+   P("return vs print","Beginners often mix up print and return. They look similar in a small program, but they do different jobs.\n- print shows a value on screen for a human to read\n- return hands a value back to the code that called the function, so it can be used again\n> def double(x):\n>     return x * 2\n> result = double(5)\n> print(result + 1)\nBecause double returned 10, we could add 1 to it. If double had only printed 10, result would hold nothing and the last line would fail.\n## No return means None\nA function with no return statement gives back None, which means no value. Run the example and compare the two results.","def shout(text):\n    print(text.upper())\n\ndef double(x):\n    return x * 2\n\nprint(double(4) + 1)\nprint(shout(\"hi\"))"),
+   P("Challenge: double it","Time to write real code. Finish the function so it returns the number multiplied by 2.\nThe last line calls double(4) and prints the result. When your code prints 8, you pass.\nHint: replace the word pass with a return statement.","def double(x):\n    # return x times 2\n    pass\n\nprint(double(4))","8"),
+   P("Multiple parameters and defaults","A function can take more than one input. Separate the parameters with commas, then give a value for each when you call it.\n> def rectangle_area(width, height):\n>     return width * height\n## Default values\nA parameter can have a default, which is used when the caller leaves that argument out.\n> def greet(name=\"friend\"):\n>     return \"hi \" + name\nCalling greet() gives hi friend, and calling greet(\"Sam\") gives hi Sam.\n## A rule to remember\nParameters with defaults must come after the ones without. Run the example, then try calling greet with and without a name.","def rectangle_area(width, height):\n    return width * height\n\ndef greet(name=\"friend\"):\n    return \"hi \" + name\n\nprint(rectangle_area(3, 4))\nprint(greet())\nprint(greet(\"Sam\"))"),
+   P("Challenge: add two numbers","Write a function add(a, b) that returns a plus b.\nThe last line calls add(2, 3). When your code prints 5, you pass.","def add(a, b):\n    # your code here\n    pass\n\nprint(add(2, 3))","5"),
+   P("Challenge: the welcome function","Put it all together. Write welcome(name, place) so it returns text like Welcome Sam from Earth.\nGive place a default value of \"Earth\". Join pieces of text with + and remember the spaces.\nYour code should print exactly:\n> Welcome Sam from Earth\n> Welcome Ana from Paris","def welcome(name, place=\"Earth\"):\n    # return a string like: Welcome Sam from Earth\n    pass\n\nprint(welcome(\"Sam\"))\nprint(welcome(\"Ana\", \"Paris\"))","Welcome Sam from Earth\nWelcome Ana from Paris")],
+   quiz:[Q("What does len(\"curious\") return?",["6","7","8","curious"],1),Q("Which keyword creates a function?",["func","define","def","fun"],2),
+   Q("What is the difference between print and return?",["There is no difference","print shows a value on screen, return sends a value back to the caller","return shows text on screen","print ends the function"],1),
+   Q("What does print(add(2, 3) * 2) show if add returns a + b?",["5","10","23","6"],1),Q("What does a function give back if it has no return statement?",["0","An empty string","None","An error"],2),
+   Q("In def greet(name=\"friend\"), what is \"friend\"?",["A required argument","A default value","The function name","A return value"],1),
+   Q("Why does indentation matter in Python?",["It only affects looks","It shows which lines belong inside the function","It makes code faster","It is optional"],1),Q("What does print(max(3, 9, 4)) show?",["3","4","9","max"],2)]},
+  {title:"How the chess pieces move",category:"Chess",blurb:"Learn every piece, practice on a board, then take the quiz.",level:"Beginner",mins:20,order:2,pass:70,lessons:[
+   T("The board and the pieces","Chess is played on an 8 by 8 board with 64 squares that alternate between light and dark. Columns are called files and are labeled a to h. Rows are called ranks and are numbered 1 to 8.\n## Your army\nEach player starts with 16 pieces:\n- 8 pawns\n- 2 rooks\n- 2 knights\n- 2 bishops\n- 1 queen\n- 1 king\n## The goal\nYou win by checkmating the opponent's king, which means the king is attacked and has no way to escape. A king is never actually captured.\n## Piece values\nPlayers use points to compare pieces when deciding trades: a pawn is worth 1, a knight or bishop 3, a rook 5, and a queen 9. The king has no point value because losing him ends the game.\nNext you will learn how each piece moves and practice on a board. Mark this lesson done to continue."),
+   C("The rook","The rook moves any number of squares in a straight line: forward, backward, left or right. It cannot move diagonally and it cannot jump over other pieces, so it needs open lines to be effective.\n## Where rooks shine\nRooks are strongest on open files, which are columns with no pawns in the way. Two rooks working together on the same file or rank are very powerful.\n## Worth remembering\n- A rook is worth about 5 points\n- The rook takes part in castling, a special move that tucks your king to safety\n- On an empty board, a rook attacks 14 squares from anywhere\nPractice: click any square the rook could legally move to. A wrong square means you try that round again.","rook",5),
+   C("The bishop","The bishop moves any number of squares along a diagonal. It cannot jump over pieces.\n## Light and dark\nEach bishop stays on the color it started on for the whole game. That is why each player has two bishops: one for light squares and one for dark squares.\n## Strengths and weaknesses\n- Bishops are strong at long range when diagonals are open\n- A single bishop can never attack squares of the opposite color\n- A bishop is worth about 3 points, similar to a knight\nBishops love open positions, where long diagonals let them reach across the board.\nPractice: click any square the bishop could legally move to.","bishop",5),
+   C("The knight","The knight moves in an L shape: two squares in one direction, then one square at a right angle.\n## The jumper\nThe knight is the only piece that can jump over other pieces, friend or foe. That makes it useful in crowded positions where other pieces are blocked.\n## Worth remembering\n- A knight always lands on the opposite color from the one it started on\n- Knights are strongest near the center, where they can reach up to 8 squares\n- A knight in a corner reaches only 2 squares\n- A knight is worth about 3 points\nPractice: click any square the knight could jump to.","knight",5),
+   C("The queen","The queen is the most powerful piece. She moves any number of squares in a straight line or diagonally, so she combines the powers of the rook and the bishop.\n## Power and risk\nBecause she is worth about 9 points, trading your queen for a lower-value piece is usually a mistake. Beginners often bring the queen out too early, and the opponent chases her with smaller pieces. Develop your knights and bishops first.\n## Worth remembering\n- On an empty board a queen in the center attacks 27 squares\n- She cannot jump over pieces\n- She cannot move like a knight\nPractice: click any square the queen could move to.","queen",5),
+   C("The king","The king moves exactly one square in any direction: up, down, sideways or diagonally.\n## Check and checkmate\nThe king can never move into a square attacked by an enemy piece. When your king is attacked, it is in check, and you must respond at once by moving away, blocking the attack or capturing the attacker. If none of those is possible, it is checkmate and the game is over.\n## Staying safe\n- Early in the game the king is safer tucked in a corner behind pawns, which is what castling does\n- In the endgame, when fewer pieces remain, the king becomes an active fighter\nPractice: click any square the king could move to.","king",5),
+   C("The pawn","Pawns look weak, but they shape the whole game, and they move in a special way.\n## Moving\nA pawn moves forward one square and never backward. On its very first move it may move forward two squares instead. In this practice, white pawns move up the board.\n## Capturing\nA pawn captures one square diagonally forward, not straight ahead. That means a pawn can be blocked by a piece directly in front of it. The practice board is empty, so you will only practice forward moves.\n## Special rules\n- Promotion: a pawn that reaches the far side of the board is exchanged for a queen, rook, bishop or knight (most players choose a queen)\n- En passant: a special capture available right after an enemy pawn moves two squares past your pawn\nPractice: click a square the pawn could move to. The two-square move is only available from the starting row.","pawn",4)],
+   quiz:[Q("A bishop starts on a light square. Which squares can it ever reach?",["Only light squares","Only dark squares","Any square","Only squares in its column"],0),Q("Which piece can jump over other pieces?",["Bishop","Rook","Knight","Queen"],2),
+   Q("How many squares can a king move per turn (ignoring castling)?",["One","Two","Any number in a line","Up to three"],0),Q("The queen combines the movement of which two pieces?",["Rook and knight","Bishop and knight","Rook and bishop","King and rook"],2),
+   Q("How far may a white pawn move on its first move?",["Only 1 square","1 or 2 squares","Up to 3 squares","Any number"],1),Q("A knight on e4 can move to which of these squares?",["e6","g5","e5","h4"],1),
+   Q("A rook on a1 on an empty board can move to which square?",["b2","a8","c3","b3"],1),Q("Which statement about pawns is true?",["They move diagonally to go forward","They never move backward","They move like bishops","They can move in any direction"],1)]}];
+  for(const o of courses.filter(x=>S.some(y=>y.title==x.title)))await deleteDoc(doc(db,"courses",o.id));
+  for(const x of S)await addDoc(collection(db,"courses"),x);toast("Added")}};
+document.addEventListener("keydown",e=>{if(e.key=="Tab"&&!e.shiftKey&&e.target.classList?.contains("code")){e.preventDefault();const t=e.target;t.setRangeText("    ",t.selectionStart,t.selectionEnd,"end")}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&A[b.dataset.a]){e.preventDefault();A[b.dataset.a](b.dataset.v)}});
 document.addEventListener("input",e=>{const t=e.target.dataset.t;if(!t)return;theme[t]=t=="radius"?+e.target.value:e.target.value;applyTheme();if(t=="font")render()});
 document.addEventListener("change",e=>{const f=e.target.files?.[0];if(e.target.id!="pf"||!f)return;const im=new Image();
@@ -245,7 +336,8 @@ document.addEventListener("submit",async e=>{e.preventDefault();const id=e.targe
  if(id=="gpF"){const r=await addDoc(collection(db,"groups"),{name:v("gn"),desc:v("gd"),owner:user.uid,at:Date.now()});gid=r.id;g("gn").value=g("gd").value="";render()}
  if(id=="mgF"&&v("mt")){await addDoc(collection(db,"msgs"),{gid,uid:user.uid,text:v("mt"),at:Date.now()});g("mt").value=""}
  if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value});modal=null;toast("Saved");render()}
- if(id=="edF"){readEdit();const{id:eid,...d}=edit;d.order=+d.order||0;d.mins=+d.mins||5;d.lessons=d.lessons.filter(l=>l.t.trim());
+ if(id=="edF"){readEdit();const{id:eid,...d}=edit;d.order=+d.order||0;d.mins=+d.mins||5;d.lessons=d.lessons.filter(l=>l.t.trim());d.pass=+d.pass||70;
+  d.quiz=(d.quiz||[]).map(x=>{const k=x.o.map((t,j)=>[t.trim(),j]).filter(z=>z[0]);return{q:x.q.trim(),o:k.map(z=>z[0]),a:Math.max(0,k.findIndex(z=>z[1]==x.a))}}).filter(x=>x.q&&x.o.length>=2);
   eid?await setDoc(doc(db,"courses",eid),d):await addDoc(collection(db,"courses"),d);modal=null;toast("Published for everyone");render()}
  }catch(x){console.error(x);toast("Could not save. Check your rules.")}});
 </script>
