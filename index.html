@@ -39,7 +39,13 @@ button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}
 .dot.y{background:var(--brand);color:var(--on);border-color:var(--brand)}
 .av{flex:none;border-radius:var(--radius);background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;object-fit:cover;font-family:'JetBrains Mono',monospace}
 .cm{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
-.chat{max-height:48vh;overflow:auto}
+.chat{display:flex;flex-direction:column;gap:8px;overflow:auto;height:calc(100vh - 190px);min-height:240px;padding:12px 0}
+.bub{align-self:flex-start;max-width:78%;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:6px 11px}.bub.me{align-self:flex-end;background:var(--soft);border-color:var(--brand)}
+.cbar{position:sticky;bottom:0;background:var(--bg);padding:10px 0}.chathead{display:flex;gap:10px;align-items:center;padding:8px 0 10px;border-bottom:1px solid var(--line)}
+.top{position:sticky;top:0;z-index:4;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:20px}
+.menu{display:flex;gap:2px;flex-wrap:wrap}.menu button{background:none;border:0;padding:6px 12px;color:var(--muted);font-weight:500;border-bottom:2px solid transparent}.menu button.on{color:var(--ink);border-color:var(--brand)}
+.chip{font:500 .75rem 'JetBrains Mono',monospace;border:1px solid var(--line);border-radius:var(--radius);padding:3px 8px}
+.lnk{background:none;border:0;padding:0;font:inherit;color:inherit;font-weight:600;text-align:left}.lnk:hover{text-decoration:underline}.lnk.k{font-weight:500}
 .f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}.f label{font-weight:500;font-size:.85rem}
 input,textarea,select{border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px;background:var(--bg);width:100%}
 input[type=color]{padding:2px;height:38px}input[type=checkbox]{width:auto}input[type=range]{padding:0}input[type=file]{border:0;padding:0;background:none}
@@ -64,7 +70,7 @@ pre.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--ra
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import{getAuth,createUserWithEmailAndPassword as signUp,signInWithEmailAndPassword as signIn,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import{getFirestore,collection,onSnapshot,addDoc,setDoc,deleteDoc,doc,query,orderBy,limit,arrayUnion,arrayRemove,increment}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import{getFirestore,collection,onSnapshot,addDoc,setDoc,getDoc,deleteDoc,doc,query,orderBy,limit,arrayUnion,arrayRemove,increment}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 /* ===== YOUR INFO ===== */
 const firebaseConfig={apiKey:"AIzaSyCw1Dwp2dA6fUvrApz4QXdazjrCmWf3X5o",authDomain:"curiosity-maxxing.firebaseapp.com",projectId:"curiosity-maxxing",storageBucket:"curiosity-maxxing.firebasestorage.app",messagingSenderId:"935785815548",appId:"1:935785815548:web:77bc786ca9c2782866a679"};
@@ -74,24 +80,25 @@ const FORM_URL="https://forms.gle/AiDJinhiE2AC86YS9";
 
 const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(auth.app);
 const TOPICS=["Coding","Politics","News","Chess","Writing","Science","History","Money"],LEVELS=["Beginner","Intermediate","Advanced"];
-const THEMES={Mono:["#ffffff","#0a0a0b","#131315","#ececec"],Paper:["#111111","#f3f3f4","#ffffff","#111111"],Pink:["#e891b4","#fff5f9","#ffffff","#3a2230"],Blue:["#7fa9e0","#f3f8ff","#ffffff","#1d2f47"],Green:["#78c19a","#f2fbf6","#ffffff","#1c3a2b"]};
-const FONTS={Clean:"'Inter',sans-serif",Tech:"'JetBrains Mono',monospace"};
+const THEMES={Mono:["#ffffff","#0a0a0b","#131315","#ececec"],Paper:["#111111","#f3f3f4","#ffffff","#111111"],Pink:["#e07fa6","#fff5f9","#ffffff","#3a2230"],Blue:["#6c9bd8","#f3f8ff","#ffffff","#1d2f47"],Green:["#5db487","#f2fbf6","#ffffff","#1c3a2b"],Lilac:["#9a86e0","#f6f3ff","#ffffff","#2a2347"],Peach:["#e8956f","#fff6f1","#ffffff","#45291c"],Yellow:["#d4a83a","#fffbec","#ffffff","#43391a"],Teal:["#4fb8b0","#f0fbfa","#ffffff","#18393a"]};
+const COLORS=["Pink","Blue","Green","Lilac","Peach","Yellow","Teal"];
 let qz={k:"",ans:{},sub:false};
 let ch=null,run={k:"",out:"",ok:null,busy:false};
-let user,courses=[],users=[],posts=[],groups=[],msgs=[],likes=[],site={},view="home",tab="feed",gid=null,openPost=null,cid=null,li=0,modal=null,edit=null,filter="For you",mode="login",picked=[],unsubs=[];
-let theme={brand:"#ffffff",bg:"#0a0a0b",card:"#131315",ink:"#ececec",radius:4,font:"Clean"};
-try{Object.assign(theme,JSON.parse(localStorage.getItem("theme3")||"{}"))}catch{}
+let user,courses=[],users=[],posts=[],groups=[],msgs=[],likes=[],friends=[],puid=null,pq="",site={},view="home",tab="feed",gid=null,openPost=null,cid=null,li=0,modal=null,edit=null,filter="For you",mode="login",picked=[],unsubs=[];
+let themePick="auto",tsync=0,radius=4;
+try{radius=JSON.parse(localStorage.getItem("theme4")||"{}").radius??4}catch{}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const isAdmin=()=>user&&user.uid===ADMIN_UID;
 const me=()=>users.find(u=>u.id===user?.uid)||{name:"",done:[],log:[],coins:0,interests:[],w:{}};
 const toast=m=>{const t=document.createElement("div");t.className="toast";t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2200)};
 const lum=h=>{const n=parseInt(h.slice(1),16),f=v=>(v/=255)<=.03928?v/12.92:((v+.055)/1.055)**2.4;return .2126*f(n>>16)+.7152*f(n>>8&255)+.0722*f(n&255)};
-function applyTheme(){const r=document.documentElement.style,t=theme;
- r.setProperty("--brand",t.brand);r.setProperty("--bg",t.bg);r.setProperty("--card",t.card);r.setProperty("--ink",t.ink);
- r.setProperty("--on",lum(t.brand)>.45?"#111":"#fff");r.setProperty("--radius",t.radius+"px");r.setProperty("--font",FONTS[t.font]||FONTS.Clean);
- try{localStorage.setItem("theme3",JSON.stringify(t))}catch{}}
-applyTheme();
+const autoName=()=>{const h=new Date().getHours();return h>=21||h<6?"Mono":"Paper"};
+function applyTheme(){const t=THEMES[themePick=="auto"?autoName():themePick]||THEMES.Paper,r=document.documentElement.style;
+ r.setProperty("--brand",t[0]);r.setProperty("--bg",t[1]);r.setProperty("--card",t[2]);r.setProperty("--ink",t[3]);
+ r.setProperty("--on",lum(t[0])>.45?"#111":"#fff");r.setProperty("--radius",radius+"px");
+ try{localStorage.setItem("theme4",JSON.stringify({radius}))}catch{}}
+applyTheme();setInterval(()=>{if(themePick=="auto")applyTheme()},60000);
 const saveMe=p=>setDoc(doc(db,"users",user.uid),p,{merge:true});
 const key=(c,i)=>c+":"+i;
 const day=d=>{d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -99,7 +106,7 @@ const streak=u=>{const s=new Set((u.log||[]).map(x=>x.split("|")[0]));let n=0,d=
 const age=b=>{const d=new Date(b),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))a--;return a};
 const ago=t=>{const s=(Date.now()-t)/1000;return s<60?"now":s<3600?Math.floor(s/60)+"m":s<86400?Math.floor(s/3600)+"h":Math.floor(s/86400)+"d"};
 const hasQ=c=>(c.quiz||[]).length>0;
-const prog=c=>{const L=c.lessons||[],m=me(),d=m.done||[],q=hasQ(c);return{n:L.length+(q?1:0),d:L.filter((_,i)=>d.includes(key(c.id,i))).length+(q&&(m.passed||[]).includes(c.id)?1:0)}};
+const prog=(c,u)=>{const L=c.lessons||[],m=u||me(),d=m.done||[],q=hasQ(c);return{n:L.length+(q?1:0),d:L.filter((_,i)=>d.includes(key(c.id,i))).length+(q&&(m.passed||[]).includes(c.id)?1:0)}};
 const locked=(c,i)=>!isAdmin()&&!(c.lessons||[]).slice(0,i).every((_,j)=>(me().done||[]).includes(key(c.id,j)));
 const score=c=>{const m=me(),k=(c.category||"").toLowerCase(),p=prog(c);return((m.interests||[]).some(i=>i.toLowerCase()==k)?6:0)+((m.w||{})[c.category]||0)+(c.featured?1:0)-(p.n&&p.d==p.n?20:0)};
 const likeN=id=>likes.filter(l=>l.c==id).length,liked=id=>likes.some(l=>l.id==id+"_"+user.uid);
@@ -129,27 +136,33 @@ const quizBox=(c,passed)=>{const Q=c.quiz;if(qz.k!=c.id)qz={k:c.id,ans:{},sub:fa
  ${x.o.map((o,j)=>`<label style="display:block;padding:3px 0"><input type="radio" name="q${i}" data-a="pick" data-v="${i}:${j}" ${qz.ans[i]===j?"checked":""}> ${esc(o)}${qz.sub&&qz.ans[i]===j?(j===x.a?" (correct)":" (incorrect)"):""}</label>`).join("")}</fieldset>`).join("")}
  ${qz.sub?`<p><b>Score: ${sc} of ${Q.length}.</b> ${ok?"You passed.":"Not yet. Review the lessons and try again."}</p>`:""}
  <div class="row">${ok?"":`<button class="btn p" data-a="submitq" ${Object.keys(qz.ans).length<Q.length||qz.sub?"disabled":""}>Submit answers</button>`}${qz.sub&&!ok?`<button class="btn" data-a="retryq">Try again</button>`:""}</div>`};
+const cc=u=>courses.filter(c=>{const p=prog(c,u);return p.n&&p.d==p.n}).length;
+const fr=(a,b)=>friends.some(f=>f.a==a&&f.b==b),isFriend=id=>fr(user.uid,id)&&fr(id,user.uid);
+const frState=id=>isFriend(id)?"Friends":fr(user.uid,id)?"Requested":fr(id,user.uid)?"Accept request":"Add friend";
+const friendsList=()=>users.filter(u=>u.id!=user.uid&&u.name&&isFriend(u.id));
+const unOk=u=>/^[a-z0-9_]{3,20}$/.test(u);
+const ITEMS=[["Scholar",50],["Night owl",75],["Bookworm",100],["Streak keeper",150],["Chess master",200],["Legend",400]];
 const av=(u,s)=>u?.pfp?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u?.name||"?")[0]||"?").toUpperCase()}</div>`;
 
 /* ---------- data ---------- */
 onAuthStateChanged(auth,u=>{user=u;unsubs.forEach(f=>f());unsubs=[];
  if(u){const L=(q,fn)=>unsubs.push(onSnapshot(q,s=>{fn(s.docs.map(d=>({id:d.id,...d.data()})));render()},e=>console.error(e)));
-  L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);L(collection(db,"users"),x=>users=x);
+  L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);L(collection(db,"users"),x=>{users=x;if(!tsync&&me().name){tsync=1;if(me().themePick){themePick=me().themePick;applyTheme()}}});
   L(query(collection(db,"posts"),orderBy("at","desc"),limit(200)),x=>posts=x);L(query(collection(db,"groups"),orderBy("at","desc")),x=>groups=x);
-  L(query(collection(db,"msgs"),orderBy("at","desc"),limit(300)),x=>msgs=x);L(collection(db,"likes"),x=>likes=x);
+  L(query(collection(db,"msgs"),orderBy("at","desc"),limit(300)),x=>msgs=x);L(collection(db,"likes"),x=>likes=x);L(collection(db,"friends"),x=>friends=x);
   unsubs.push(onSnapshot(doc(db,"settings","site"),s=>{site=s.data()||{};render()}));
- }else{courses=[];users=[];view="home"}
+ }else{courses=[];users=[];view="home";themePick="auto";tsync=0;applyTheme()}
  render()});
 
 /* ---------- views ---------- */
 const nm=()=>esc((site.name||"curiosity maxxing").toLowerCase());
-const nav=()=>`<div class="nav"><div class="logo">${nm()}</div>
- ${[["home","Courses"],["comm","Community"],["me","Profile"],["set","Settings"]].map(([v,n])=>`<button class="btn ${view==v||(v=="home"&&view=="course")?"on":""}" data-a="go" data-v="${v}">${n}</button>`).join("")}
- ${isAdmin()?`<button class="btn p" data-a="new">New course</button><button class="btn" data-a="site">Site</button>`:""}</div>`;
+const nav=()=>`<header class="top"><div class="logo">${nm()}</div>
+ <nav class="menu">${[["home","Courses"],["comm","Community"],["shop","Shop"],["me","Profile"],["set","Settings"]].map(([v,n])=>`<button class="${view==v||(v=="home"&&view=="course")||(v=="comm"&&view=="user")?"on":""}" data-a="go" data-v="${v}">${n}</button>`).join("")}</nav>
+ <div class="row" style="gap:6px"><span class="chip">${streak(me())}d streak</span><span class="chip">${me().coins||0} coins</span>${isAdmin()?`<button class="btn s p" data-a="new">New course</button><button class="btn s" data-a="site">Site</button>`:""}</div></header>`;
 
-const authView=()=>{const s=mode=="up";return`<div class="land"><div class="logo">${nm()}</div><h1>Learn one small thing at a time.</h1><p>Short courses on code, politics, chess and more. Build a streak, earn coins, and learn with a community.</p></div>
+const authView=()=>{const s=mode=="up";return`<div class="land"><div class="logo">${nm()}</div><h1>Learn one small thing at a time.</h1><p>Short courses on code, politics, chess and more. Build a streak, earn coins, make friends and learn together.</p></div>
  <div class="auth box"><h2>${s?"Create your account":"Log in"}</h2><form id="authF" style="margin-top:14px">
- ${s?`<div class="f"><label for="nm">Name</label><input id="nm" required maxlength="24"></div>`:""}
+ ${s?`<div class="f"><label for="nm">Name</label><input id="nm" required maxlength="24"></div><div class="f"><label for="un">Username</label><input id="un" required maxlength="20" placeholder="letters, numbers, underscore" autocapitalize="none"></div>`:""}
  <div class="f"><label for="em">Email</label><input id="em" type="email" required></div>
  <div class="f"><label for="pw">Password</label><input id="pw" type="password" minlength="6" required></div>
  ${s?`<div class="f"><label for="bd">Birthday</label><input id="bd" type="date" required></div>
@@ -166,7 +179,7 @@ function home(){const vis=courses.filter(c=>!c.draft||isAdmin()),m=me();
  <div class="chips">${cats.map(c=>`<button class="btn s ${c==filter?"on":""}" data-a="cat" data-v="${esc(c)}">${esc(c)}</button>`).join("")}</div>
  ${list.length?`<div class="grid">${list.map(c=>{const p=prog(c);return`<button class="card" data-a="open" data-v="${c.id}"><span class="k">${esc(c.category||"General")} / ${esc(c.level||"")}${c.draft?" / draft":c.featured?" / featured":""}</span>
   <h3>${esc(c.title)}</h3><p>${esc(c.blurb)}</p><span class="k">${esc(c.mins||"?")} min / ${p.n} steps / ${p.d} done</span><div class="bar"><i style="width:${p.n?p.d/p.n*100:0}%"></i></div></button>`}).join("")}</div>`
- :`<div class="box k">No courses yet. ${isAdmin()?`<button class="btn p" data-a="seed">Add Python + Chess courses</button>`:""}</div>`}
+ :`<div class="box k">No courses yet. ${isAdmin()?`<button class="btn p" data-a="seed">Add starter courses</button>`:""}</div>`}
  <div class="box row"><div><h3>Got an idea?</h3><span class="k">Suggest a course you want to see.</span></div><a class="btn p sp" href="${esc(site.formUrl||FORM_URL)}" target="_blank" rel="noopener" style="text-decoration:none">Suggest a course</a></div>`}
 
 function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class="btn" data-a="go" data-v="home">Back</button>`;
@@ -181,38 +194,64 @@ function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class=
  <div class="row" style="margin-top:14px">${gated(l)?`<span class="k">${dn?"Lesson completed":"Finish the challenge above to complete this lesson."}</span>`:`<button class="btn p" data-a="done">${dn?"Undo":"Mark as done (+10 coins)"}</button>`}
  <button class="btn s" data-a="les" data-v="${li-1}" ${li?"":"disabled"}>Prev</button><button class="btn s" data-a="les" data-v="${li+1}" ${li<max&&(dn||isAdmin())?"":"disabled"}>Next</button></div>`}</div></div>`}
 
-function postHtml(p){const u=users.find(x=>x.id==p.uid),rs=posts.filter(x=>x.parent==p.id).reverse();
- const who=(w,t)=>`<b>${esc(w?.name||"user")}</b> <span class="k">${esc(w?.pronouns||"")} ${w?.pronouns?"/":""} ${ago(t)}</span>`,del=x=>isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delp" data-v="${x.id}">Delete</button>`:"";
- return`<div class="box"><div class="row">${av(u,36)}<div>${who(u,p.at)}</div><span class="sp">${del(p)}</span></div><p style="margin:10px 0;white-space:pre-wrap">${esc(p.text)}</p>
+const nmBtn=(u,id)=>`<button class="lnk" data-a="user" data-v="${id}">${esc(u?.name||"user")}</button>`;
+const who=(u,id,t)=>`${nmBtn(u,id)} <span class="k">${u?.pronouns?esc(u.pronouns)+" ":""}- ${ago(t)}</span>`;
+const avBtn=(u,id,s)=>`<button class="lnk" data-a="user" data-v="${id}" aria-label="${esc(u?.name||"user")}">${av(u,s)}</button>`;
+function postHtml(p){const u=users.find(x=>x.id==p.uid),rs=posts.filter(x=>x.parent==p.id).reverse(),del=x=>isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delp" data-v="${x.id}">Delete</button>`:"";
+ return`<div class="box"><div class="row">${avBtn(u,p.uid,36)}<div>${who(u,p.uid,p.at)}</div><span class="sp">${del(p)}</span></div><p style="margin:10px 0;white-space:pre-wrap">${esc(p.text)}</p>
  <div class="row"><button class="btn s ${liked(p.id)?"p":""}" data-a="like" data-v="${p.id}">Like ${likeN(p.id)}</button><button class="btn s" data-a="thread" data-v="${p.id}">Replies ${rs.length}</button></div>
- ${openPost==p.id?`<div style="margin-top:12px">${rs.map(r=>{const w=users.find(x=>x.id==r.uid);return`<div class="cm">${av(w,28)}<div style="flex:1">${who(w,r.at)}<div>${esc(r.text)}</div><button class="btn s ${liked(r.id)?"p":""}" data-a="like" data-v="${r.id}">Like ${likeN(r.id)}</button></div>${del(r)}</div>`}).join("")}
+ ${openPost==p.id?`<div style="margin-top:12px">${rs.map(r=>{const w=users.find(x=>x.id==r.uid);return`<div class="cm">${avBtn(w,r.uid,28)}<div style="flex:1">${who(w,r.uid,r.at)}<div>${esc(r.text)}</div><button class="btn s ${liked(r.id)?"p":""}" data-a="like" data-v="${r.id}">Like ${likeN(r.id)}</button></div>${del(r)}</div>`}).join("")}
  <form id="rpF" class="row" style="margin-top:10px"><input id="rt" maxlength="500" placeholder="Write a reply" style="flex:1"><button class="btn p">Reply</button></form></div>`:""}</div>`}
 
 const feed=()=>`<form id="poF" class="box"><textarea id="pt" maxlength="500" placeholder="Say what's on your mind"></textarea><div class="row" style="margin-top:8px"><span class="k">max 500 characters</span><button class="btn p sp">Post</button></div></form>${posts.filter(p=>!p.parent).map(postHtml).join("")||'<p class="k">No posts yet. Start the conversation.</p>'}`;
 
-function groupsView(){const g=groups.find(x=>x.id==gid),ms=g?msgs.filter(m=>m.gid==gid).reverse():[];
- return`<div class="two"><div><form id="gpF" class="box"><div class="f"><label for="gn">New group</label><input id="gn" required maxlength="30" placeholder="Name"></div><div class="f"><input id="gd" maxlength="80" placeholder="What is it about?" aria-label="Group description"></div><button class="btn p">Create group</button></form>
- ${groups.map(x=>`<button class="les ${x.id==gid?"cur":""}" data-a="grp" data-v="${x.id}"><span><b>${esc(x.name)}</b><br><span class="k">${esc(x.desc||"")}</span></span></button>`).join("")}</div>
- <div class="box">${g?`<div class="row"><h3>${esc(g.name)}</h3>${isAdmin()||g.owner==user.uid?`<button class="btn s d sp" data-a="delg" data-v="${g.id}">Delete group</button>`:""}</div>
- <div class="chat">${ms.map(m=>{const u=users.find(x=>x.id==m.uid);return`<div class="cm">${av(u,28)}<div><b>${esc(u?.name||"user")}</b> <span class="k">${ago(m.at)}</span><div>${esc(m.text)}</div></div></div>`}).join("")||'<p class="k">No messages yet.</p>'}</div>
- <form id="mgF" class="row" style="margin-top:10px"><input id="mt" maxlength="500" placeholder="Message" style="flex:1"><button class="btn p">Send</button></form>`:'<p class="k">Pick or create a group to start chatting.</p>'}</div></div>`}
+function chats(){const gs=groups.filter(g=>(g.members||[]).includes(user.uid)).map(g=>({g,m:msgs.find(m=>m.gid==g.id)})).sort((a,b)=>(b.m?.at||b.g.at)-(a.m?.at||a.g.at));
+ return`<div class="row" style="margin:12px 0"><button class="btn p" data-a="newgroup">New group</button></div>
+ ${gs.map(({g,m})=>{const u=m&&users.find(x=>x.id==m.uid);return`<button class="les" data-a="chat" data-v="${g.id}">${av({name:g.name},40)}<span style="flex:1;min-width:0"><b>${esc(g.name)}</b><br><span class="k">${m?esc((u?.name||"user")+": "+m.text.slice(0,50)):"No messages yet"}</span></span><span class="k">${m?ago(m.at):""}</span></button>`}).join("")||'<p class="k">No chats yet. Make friends, then create a group.</p>'}`}
 
-const comm=()=>`<div class="row">${[["feed","Feed"],["groups","Groups"]].map(([t,n])=>`<button class="btn ${t==tab?"on":""}" data-a="tab" data-v="${t}">${n}</button>`).join("")}</div>`+(tab=="feed"?feed():groupsView());
+function people(){const q=pq.toLowerCase(),list=users.filter(u=>u.id!=user.uid&&u.name&&(!q||(u.name+" "+(u.username||"")).toLowerCase().includes(q))).sort((a,b)=>isFriend(b.id)-isFriend(a.id)).slice(0,30);
+ return`<div class="f" style="margin-top:12px"><label for="pq">Find people by name or username</label><input id="pq" value="${esc(pq)}" autocomplete="off"></div>
+ ${list.map(u=>`<button class="les" data-a="user" data-v="${u.id}">${av(u,36)}<span style="flex:1"><b>${esc(u.name)}</b> <span class="k">${u.username?"@"+esc(u.username):""}</span></span><span class="k">${frState(u.id)}</span></button>`).join("")||'<p class="k">No one found.</p>'}`}
 
-function profile(){const m=me(),dn=courses.filter(c=>{const p=prog(c);return p.n&&p.d==p.n}).length;
- return`<div class="box"><div class="row" style="align-items:flex-start">${av(m,88)}<div style="flex:1"><h1>${esc(m.name)}</h1><div class="k">${esc(m.pronouns||"no pronouns set")}</div><p style="max-width:52ch;margin:8px 0 0">${esc(m.bio||"No bio yet.")}</p></div><button class="btn" data-a="go" data-v="set">Edit profile</button></div></div>
- <div class="tiles">${[[(m.done||[]).length,"lessons completed"],[dn,"courses completed"],[streak(m)+"d","day streak"],[m.coins||0,"coins"]].map(([a,b])=>`<div class="tile"><b>${a}</b><span>${b}</span></div>`).join("")}</div>`}
+const comm=()=>`<div class="row">${[["feed","Feed"],["chats","Chats"],["people","People"]].map(([t,n])=>`<button class="btn ${t==tab?"on":""}" data-a="tab" data-v="${t}">${n}</button>`).join("")}</div>`+({feed,chats,people}[tab]||feed)();
+
+function chatView(){const g=groups.find(x=>x.id==gid);if(!g)return`<button class="btn" data-a="go" data-v="comm">Back</button>`;const ms=msgs.filter(m=>m.gid==gid).reverse();
+ return`<div class="chathead"><button class="btn s" data-a="go" data-v="comm">Back</button>${av({name:g.name},34)}<div style="flex:1;min-width:0"><b>${esc(g.name)}</b><div class="k">${(g.members||[]).length} members</div></div><button class="btn s" data-a="members">Members</button></div>
+ <div class="chat">${ms.map(m=>{const mine=m.uid==user.uid,u=users.find(x=>x.id==m.uid);return`<div class="bub ${mine?"me":""}">${mine?"":`<button class="lnk k" data-a="user" data-v="${m.uid}">${esc(u?.name||"user")}</button>`}<div>${esc(m.text)}</div><span class="k">${ago(m.at)}</span></div>`}).join("")||'<p class="k" style="text-align:center">Say hello.</p>'}</div>
+ <form id="mgF" class="cbar row"><input id="mt" maxlength="500" placeholder="Message" style="flex:1" autocomplete="off"><button class="btn p">Send</button></form>`}
+
+const membersModal=()=>{const g=groups.find(x=>x.id==gid),own=g.owner==user.uid||isAdmin(),can=friendsList().filter(u=>!(g.members||[]).includes(u.id));
+ return`<div class="modal"><div class="sheet"><div class="row"><h2>Members</h2><button class="btn s sp" data-a="x">Close</button></div>
+ ${(g.members||[]).map(id=>{const u=users.find(x=>x.id==id);return`<div class="row" style="padding:8px 0;border-top:1px solid var(--line)">${avBtn(u,id,30)}<button class="lnk" data-a="user" data-v="${id}">${esc(u?.name||"user")}</button>${id==g.owner?'<span class="k">owner</span>':""}</div>`}).join("")}
+ ${own&&can.length?`<div class="row" style="margin-top:14px"><select id="addm" style="flex:1">${can.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}</select><button class="btn p" data-a="addmember">Add friend</button></div>`:own?'<p class="k">Add friends from the People tab to invite them.</p>':""}</div></div>`};
+
+const newGroupModal=()=>`<div class="modal"><div class="sheet"><div class="row"><h2>New group</h2><button class="btn s sp" data-a="x">Close</button></div>
+ <form id="gpF" style="margin-top:12px"><div class="f"><label for="gn">Group name</label><input id="gn" required maxlength="30"></div>
+ <div class="f"><label>Add friends</label>${friendsList().map(u=>`<label style="display:block;padding:3px 0"><input type="checkbox" id="gf${u.id}"> ${esc(u.name)}</label>`).join("")||'<span class="k">No friends yet. Add some in the People tab.</span>'}</div>
+ <button class="btn p">Create</button></form></div></div>`;
+
+const addToGroup=id=>{if(!isFriend(id))return`<p class="k">Become friends to add them to a group.</p>`;const gs=groups.filter(g=>(g.owner==user.uid||isAdmin())&&!(g.members||[]).includes(id));
+ return gs.length?`<div class="box row"><span>Add to a group</span><select id="atg" style="flex:1;max-width:260px">${gs.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select><button class="btn p" data-a="addtog" data-v="${id}">Add</button></div>`:""};
+
+function profileOf(id){const self=id==user.uid,u=self?me():users.find(x=>x.id==id);if(!u)return'<p class="k">User not found.</p>';
+ return`${self?"":`<div class="row"><button class="btn" data-a="go" data-v="comm">Back</button></div>`}
+ <div class="box"><div class="row" style="align-items:flex-start">${av(u,88)}<div style="flex:1"><h1>${esc(u.name)}</h1><div class="k">${u.username?"@"+esc(u.username)+" / ":""}${esc(u.pronouns||"no pronouns set")}${u.title?" / "+esc(u.title):""}</div><p style="max-width:52ch;margin:8px 0 0">${esc(u.bio||"No bio yet.")}</p></div>
+ ${self?`<button class="btn" data-a="go" data-v="set">Edit profile</button>`:`<button class="btn ${isFriend(id)?"on":"p"}" data-a="friend" data-v="${id}">${frState(id)}</button>`}</div></div>
+ <div class="tiles">${[[(u.done||[]).length,"lessons completed"],[cc(u),"courses completed"],[streak(u)+"d","day streak"],...(self?[[u.coins||0,"coins"]]:[])].map(([a,b])=>`<div class="tile"><b>${a}</b><span>${b}</span></div>`).join("")}</div>${self?"":addToGroup(id)}`}
+
+function shop(){const m=me(),own=m.owned||[];
+ return`<h1>Shop</h1><p class="k">You have ${m.coins||0} coins. Earn more by finishing lessons and passing quizzes.</p><div class="grid" style="margin-top:14px">${ITEMS.map(([n,pr])=>`<div class="card"><span class="k">Profile title</span><h3>${n}</h3><p>Shows under your name on your profile.</p>${own.includes(n)?`<button class="btn ${m.title==n?"on":""}" data-a="equip" data-v="${n}">${m.title==n?"Equipped":"Equip"}</button>`:`<button class="btn p" data-a="buy" data-v="${n}" ${(m.coins||0)<pr?"disabled":""}>Buy for ${pr} coins</button>`}</div>`).join("")}</div>`}
 
 function settings(){const m=me();return`<div class="two"><div class="box"><h3>Profile</h3><div class="row" style="margin:12px 0">${av(m,64)}<div class="f" style="margin:0"><label for="pf">Profile photo</label><input id="pf" type="file" accept="image/*"></div></div>
  <form id="meF"><div class="f"><label for="pn">Name</label><input id="pn" value="${esc(m.name)}" maxlength="24"></div>
+ ${m.username?`<div class="f"><label>Username</label><div class="k">@${esc(m.username)}</div></div>`:`<div class="f"><label for="pu">Choose a username</label><input id="pu" maxlength="20" placeholder="letters, numbers, underscore" autocapitalize="none"></div>`}
  <div class="f"><label for="pr">Pronouns</label><input id="pr" value="${esc(m.pronouns||"")}" maxlength="20" placeholder="she/her, he/him, they/them"></div>
- <div class="f"><label for="pb">Bio</label><textarea id="pb" maxlength="160">${esc(m.bio||"")}</textarea></div><button class="btn p">Save profile</button></form>
+ <div class="f"><label for="pb">Bio</label><textarea id="pb" maxlength="160">${esc(m.bio||"")}</textarea></div><div class="err" id="err"></div><button class="btn p">Save profile</button></form>
  <p><button class="btn d" data-a="out">Log out</button></p></div>
- <div class="box"><h3>Appearance</h3><p class="k">Start dark, or switch to a pastel.</p>
- <div class="row" style="gap:6px">${Object.entries(THEMES).map(([n,t])=>`<button class="btn s" data-a="preset" data-v="${n}"><span class="sw" style="background:${t[0]}"></span>${n}</button>`).join("")}</div>
- <div class="two" style="gap:10px;margin-top:14px"><div class="f"><label for="tb">Accent</label><input id="tb" type="color" data-t="brand" value="${theme.brand}"></div><div class="f"><label for="tg">Background</label><input id="tg" type="color" data-t="bg" value="${theme.bg}"></div></div>
- <div class="f"><label for="tr">Corner roundness</label><input id="tr" type="range" min="0" max="14" data-t="radius" value="${theme.radius}"></div>
- <div class="f"><label for="tf">Font</label><select id="tf" data-t="font">${Object.keys(FONTS).map(f=>`<option ${f==theme.font?"selected":""}>${f}</option>`).join("")}</select></div></div></div>`}
+ <div class="box"><h3>Appearance</h3><p class="k">Auto is dark from 9pm to 6am and light the rest of the day.</p>
+ <div class="row" style="gap:6px;margin:10px 0">${[["auto","Auto"],["Mono","Dark"],["Paper","Light"]].map(([v,n])=>`<button class="btn s ${themePick==v?"on":""}" data-a="preset" data-v="${v}">${n}</button>`).join("")}</div>
+ <p class="k">Colors</p><div class="row" style="gap:6px">${COLORS.map(n=>`<button class="btn s ${themePick==n?"on":""}" data-a="preset" data-v="${n}"><span class="sw" style="background:${THEMES[n][0]}"></span>${n}</button>`).join("")}</div>
+ <div class="f" style="margin-top:14px"><label for="tr">Corner roundness</label><input id="tr" type="range" min="0" max="14" data-t="radius" value="${radius}"></div></div></div>`}
 
 function editor(){const e=edit;return`<div class="modal"><div class="sheet"><div class="row"><h2>${e.id?"Edit course":"New course"}</h2><button class="btn s sp" data-a="x">Close</button></div>
  <form id="edF" style="margin-top:12px"><div class="f"><label for="et">Title</label><input id="et" required maxlength="70" value="${esc(e.title)}"></div>
@@ -244,14 +283,15 @@ const siteModal=()=>`<div class="modal"><div class="sheet"><div class="row"><h2>
  <form id="stF" style="margin-top:12px"><div class="f"><label for="sn">Site name</label><input id="sn" value="${esc(site.name||"curiosity maxxing")}"></div>
  <div class="f"><label for="sg">Homepage headline</label><input id="sg" value="${esc(site.tagline||"")}"></div>
  <div class="f"><label for="sb">Announcement banner (empty = hidden)</label><input id="sb" value="${esc(site.banner||"")}"></div>
- <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><div class="row"><button class="btn p">Save</button><button type="button" class="btn sp" data-a="seed">Add Python + Chess starter courses</button></div></form></div></div>`;
+ <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><div class="row"><button class="btn p">Save</button><button type="button" class="btn sp" data-a="seed">Add / refresh all starter courses</button></div></form></div></div>`;
 
 function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=="checkbox"?el.checked:el.value);
  const fid=document.activeElement?.id,pos=document.activeElement?.selectionStart;
- $("#app").innerHTML=!user?authView():nav()+({home,course,comm,me:profile,set:settings}[view]||home)()+(modal=="edit"?editor():modal=="site"?siteModal():"");
+ const body=user?({home,course,comm,me:()=>profileOf(user.uid),user:()=>profileOf(puid),set:settings,shop,chat:chatView}[view]||home)():"";
+ $("#app").innerHTML=!user?authView():(view=="chat"?"":nav())+body+(modal=="edit"?editor():modal=="site"?siteModal():modal=="members"?membersModal():modal=="newgroup"?newGroupModal():"");
  for(const id in keep){const el=document.getElementById(id);if(!el||["color","range","file"].includes(el.type))continue;if(el.type=="checkbox")el.checked=keep[id];else el.value=keep[id]}
  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch{}}}
- const ch=$(".chat");if(ch)ch.scrollTop=ch.scrollHeight}
+ const cs=$(".chat");if(cs)cs.scrollTop=cs.scrollHeight}
 
 /* ---------- actions ---------- */
 function readEdit(){const g=i=>document.getElementById(i);if(!g("et"))return;
@@ -259,6 +299,32 @@ function readEdit(){const g=i=>document.getElementById(i);if(!g("et"))return;
  edit.lessons=edit.lessons.map((l,i)=>({t:g("lt"+i).value,b:g("lb"+i).value,l:g("ll"+i).value,type:g("ly"+i).value,piece:g("lp"+i).value,rounds:+g("lr"+i).value||4,code:g("lc"+i).value,expect:g("lx"+i).value}));
  edit.pass=+g("ep").value||70;edit.quiz=edit.quiz.map((x,i)=>({q:g("qq"+i).value,o:[0,1,2,3].map(j=>g("qo"+i+"_"+j).value),a:+g("qa"+i).value}))}
 const blank=()=>({title:"",category:"",blurb:"",level:"Beginner",mins:5,order:courses.length+1,featured:false,draft:false,lessons:[bl()],quiz:[],pass:70});
+const mkT=(t,b)=>({t,b,type:"text",l:"",piece:"rook",rounds:4,code:"",expect:""}),mkQ=(q,o,a)=>({q,o,a});
+const MORE=[
+{title:"Reading the news critically",category:"News",blurb:"Judge any story in minutes.",level:"Beginner",mins:15,order:3,pass:70,lessons:[
+ mkT("Who is telling you this?","Every story comes from somewhere, and knowing where is the first step to judging it.\n## Check the source\n- Is it an outlet you can name, with a track record and a corrections policy?\n- Does the story have a named author and a date?\n- Does the site have an About page that says who runs it?\n## Know the type of content\nA news report describes what happened. An opinion piece argues for a view. Sponsored content is paid for by a company. They can sit side by side on the same site, so look for labels like Opinion, Analysis or Sponsored.\nA polished design does not make a source reliable, and an unfamiliar name does not make it fake. Look at the evidence, not the look."),
+ mkT("Headlines versus the story","Headlines are short on purpose, which means they leave things out and are written to make you click.\n## Warning signs\n- All capitals, lots of exclamation marks or shock words\n- A question headline, which is often answered with no\n- A claim in the headline that the article never supports\n## What to do\nRead past the first paragraph before you form an opinion or share a story. Check whether the quotes and numbers come with context: compared to what, over what time, and from which study or official source?\nIf you remember one habit, make it this: read the whole piece before you react to the headline."),
+ mkT("Cross-checking a claim","People who check facts for a living rarely stay on the page they are judging. They open new tabs. This is called lateral reading.\n## A quick routine\n- Search the main claim and see who else reports it\n- Look for at least two independent sources, not one story copied by many sites\n- Find the original source when you can: the official document, dataset, court filing or full study\n## Watch for copies\nMany outlets republish the same wire story, so ten websites can really be one source. Independent means a different reporter checked it.\nIf only one obscure site is reporting something huge, be patient. Real big news spreads fast."),
+ mkT("Fact, opinion and bias","A fact can be checked and shown to be true or false. An opinion is a judgment that people can reasonably disagree about.\n## Spotting the difference\n- Fact: the city council voted 5 to 4 to approve the budget\n- Opinion: the budget is a disaster\n## Loaded language\nWords like slammed, destroyed or radical carry a judgment inside what looks like a report. Notice them.\n## Everyone has a perspective\nEvery outlet and every writer has a viewpoint. That is normal. The goal is not to find a perfectly neutral source. It is to read widely, compare how different outlets cover the same event, and keep the facts separate from the spin.")],
+ quiz:[mkQ("What does lateral reading mean?",["Reading a page slowly from top to bottom","Opening other tabs to check what others say about a source or claim","Reading only the headline","Reading the comments"],1),mkQ("Which is an example of a fact?",["The budget is a disaster","The council voted 5 to 4 to approve the budget","Everyone hates the budget","The budget should be bigger"],1),mkQ("Why read past the headline?",["Headlines are always false","Headlines leave things out and may overstate the story","Headlines are legally binding","Articles are shorter"],1),mkQ("Ten sites publish the same wire story. How many independent sources is that?",["Ten","Five","One","Zero"],2),mkQ("What does a Sponsored label tell you?",["A government wrote it","A company paid for the content","It has been verified","It is the editor's opinion"],1)]},
+{title:"Writing a clear letter",category:"Writing",blurb:"From planning to proofreading.",level:"Beginner",mins:15,order:4,pass:70,lessons:[
+ mkT("Start with purpose and reader","Before you write a word, answer two questions: what do I want this letter to do, and who will read it?\n## Know your purpose\nA letter might inform, ask for something, complain, thank or apologize. If you can finish the sentence I am writing to, you are ready.\n## Know your reader\nA letter to a friend can be casual. A letter to a landlord, a school or a company needs a polite and clear tone. Think about what the reader already knows so you do not leave out key details or explain things twice.\nWrite your purpose in one sentence and keep it nearby while you draft."),
+ mkT("The parts of a letter","Formal letters follow a familiar layout so the reader can find things quickly.\n## The layout\n- Your address at the top\n- The date\n- The recipient's name and address\n- A greeting, such as Dear Ms Lee,\n- The body, in short paragraphs\n- A closing, such as Sincerely, followed by your name\n## Friendly letters\nA letter to a friend usually needs only the date, a greeting, the body and a warm closing like Take care. Match the layout to the occasion."),
+ mkT("Writing the body","The body is where the letter succeeds or fails.\n## Open with the point\nSay why you are writing in the first or second sentence. For example: I am writing to ask whether I can move my appointment to next Tuesday.\n## One idea per paragraph\nShort paragraphs are easier to read. Start a new one when you move to a new point.\n## Be specific and ask clearly\n- Give dates, names and numbers\n- State exactly what you want the reader to do\n- Say by when, if there is a deadline\nEnd with a short thank you or a line that makes the next step clear."),
+ mkT("Tone and proofreading","Tone is the feeling your words create.\n## Choosing a tone\n- Formal: full words, polite phrases, no slang, such as I would be grateful if\n- Friendly: warm and natural, and contractions are fine\n## Closings\nIn British English, Yours sincerely goes with a named person (Dear Ms Lee) and Yours faithfully goes with Dear Sir or Madam. In American English, Sincerely works for almost everything.\n## Proofread\nRead the letter out loud and listen for mistakes. Check names, dates and spelling. Leave it for ten minutes and look again. A clean letter shows respect for the reader.")],
+ quiz:[mkQ("What should you decide before you start writing?",["The font","Your purpose and who will read it","The paper color","How long it should be"],1),mkQ("Where should the main point usually go?",["In the last paragraph","In the first or second sentence","In the closing","Nowhere"],1),mkQ("Which closing suits a formal letter to a named person in the US?",["Later!","Sincerely","XOXO","Whatever"],1),mkQ("How many main ideas should a paragraph have?",["One","Five","As many as possible","None"],0),mkQ("A good proofreading habit is to...",["Skip it","Read the letter out loud","Only check the date","Use all capitals"],1)]},
+{title:"The two main US parties",category:"Politics",blurb:"A neutral guide to Democrats and Republicans.",level:"Beginner",mins:15,order:5,pass:70,lessons:[
+ mkT("A two-party system","The United States has two dominant political parties: the Democratic Party and the Republican Party. Almost every member of Congress and every governor belongs to one of them.\n## Why only two?\nMost elections use a first-past-the-post rule: whoever gets the most votes in a district wins, even without a majority. This tends to favor two big parties because votes for small parties are often seen as wasted.\n## Other parties\nThird parties such as the Libertarian and Green parties run candidates, and many voters register as independents. They rarely win national seats, but they can influence debates.\nParties are organizations, not government institutions. They pick candidates, raise money and write platforms."),
+ mkT("The Democratic Party","The Democratic Party traces its roots to the 1790s and took its modern form around 1828.\n## What Democrats generally emphasize\n- A larger role for the federal government in areas like healthcare and education\n- Stronger regulation of business and the environment\n- Support for social programs and the safety net\n- Protecting abortion access and expanding civil rights protections\n## A reminder\nThese are general tendencies. Individual Democrats range from very progressive to moderate, and they often disagree with each other."),
+ mkT("The Republican Party","The Republican Party was founded in 1854, originally to oppose the expansion of slavery. Abraham Lincoln was its first president.\n## What Republicans generally emphasize\n- A smaller federal government and more power for states\n- Lower taxes and less regulation of business\n- Strong national defense and tougher border policies\n- Gun rights and restrictions on abortion\n## A reminder\nThese are general tendencies. Individual Republicans range from libertarian to populist to traditionally conservative, and they often disagree with each other."),
+ mkT("Looking past the labels","A party label tells you only part of the story.\n## Learn from primary sources\nEach party publishes a platform. Reading it in the party's own words is more reliable than reading someone describing it.\n## Look at issues, not just teams\nPeople often agree with each party on different issues, and many voters are independents.\n## Compare coverage\nRead how several outlets across the spectrum cover the same event. Ask what each one emphasizes and what it leaves out.\nThe goal of this course is understanding, not telling you what to think.")],
+ quiz:[mkQ("Which two parties dominate US national politics?",["Democratic and Republican","Libertarian and Green","Whig and Federalist","Labour and Conservative"],0),mkQ("In what year was the Republican Party founded?",["1776","1854","1912","1968"],1),mkQ("Why does first-past-the-post tend to favor two big parties?",["It is required by law","Votes for small parties are often seen as wasted","Small parties are banned","It uses ranked ballots"],1),mkQ("What is the most reliable way to learn what a party stands for?",["Reading its platform","Asking a rival","Reading memes","Guessing"],0),mkQ("Which statement is accurate?",["All members of a party agree on everything","Members of a party can hold a range of views","Parties are government agencies","Only two parties are allowed"],1)]},
+{title:"JavaScript basics",category:"Coding",blurb:"Variables, functions and decisions in the language of the web.",level:"Beginner",mins:20,order:6,pass:70,lessons:[
+ mkT("What JavaScript is","JavaScript is the programming language of the web. It makes pages interactive: menus that open, forms that check themselves, games that run in the browser.\n## Where it runs\nEvery web browser has a JavaScript engine built in, so you do not need to install anything to try it.\n## Your first line\nPress F12 in your browser to open the developer tools, click Console, and type:\n> console.log(\"hello\")\nconsole.log shows a value in the console. It is the JavaScript version of Python's print. Try changing the text."),
+ mkT("Variables and types","A variable is a labeled box that holds a value.\n> let age = 12\n> const name = \"Sam\"\n- let makes a variable you can change later\n- const makes one that cannot be reassigned\n## Types of values\n- Strings are text, written in quotes\n- Numbers, like 42 or 3.14\n- Booleans, which are true or false\n## Joining text\n> console.log(\"Hi \" + name)\nUse const by default and switch to let only when the value needs to change. Try these in the console."),
+ mkT("Functions","A function is a reusable block of code, just like in Python.\n> function greet(name) {\n>   return \"hi \" + name\n> }\n> console.log(greet(\"Sam\"))\n## Arrow functions\nThere is a shorter way to write the same thing:\n> const double = x => x * 2\n> console.log(double(4))\n## Remember\n- Parameters are placeholders, arguments are the real values\n- return gives a value back to the caller\n- Curly braces mark where the function body starts and ends"),
+ mkT("Decisions and loops","Programs often need to choose and to repeat.\n## if and else\n> if (age >= 18) {\n>   console.log(\"adult\")\n> } else {\n>   console.log(\"minor\")\n> }\n## Comparing\n- === means equal to\n- !== means not equal to\n- > and < compare size\n## Loops\nA for loop repeats code a set number of times:\n> for (let i = 0; i < 3; i++) {\n>   console.log(i)\n> }\nThis prints 0, 1 and 2. Prefer === over == to avoid surprises.")],
+ quiz:[mkQ("Which keyword makes a variable you can change later?",["const","let","def","static"],1),mkQ("What does console.log do?",["Deletes a variable","Shows a value in the console","Creates a function","Saves a file"],1),mkQ("Which of these is a boolean?",["\"true\"","true","1","yes"],1),mkQ("What does a for loop with i from 0 while i < 3 print?",["1 2 3","0 1 2","0 1 2 3","Nothing"],1),mkQ("Which operator checks that two values are equal?",["=","===","=>","!=="],1)]}];
 const A={
  go:v=>{view=v;modal=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
  topic:v=>{picked=picked.includes(v)?picked.filter(x=>x!=v):[...picked,v];render()},
@@ -266,6 +332,13 @@ const A={
  les:v=>{const c=courses.find(x=>x.id==cid);v=+v;if(v<0)return;if(locked(c,v))return toast("Finish the earlier steps first");li=v;qz={k:"",ans:{},sub:false};render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";render()},
  new:()=>{edit=blank();modal="edit";render()},
  edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({...bl(),...l})),quiz:(c.quiz||[]).map(x=>({q:x.q,o:[...x.o],a:x.a})),pass:c.pass||70};modal="edit";render()},
+ user:v=>{puid=v;view=v==user.uid?"me":"user";modal=null;render();scrollTo(0,0)},
+ friend:v=>{const id=user.uid+"_"+v;fr(user.uid,v)?deleteDoc(doc(db,"friends",id)):setDoc(doc(db,"friends",id),{a:user.uid,b:v})},
+ chat:v=>{gid=v;view="chat";render()},newgroup:()=>{modal="newgroup";render()},members:()=>{modal="members";render()},
+ addmember:async()=>{await setDoc(doc(db,"groups",gid),{members:arrayUnion(document.getElementById("addm").value)},{merge:true});toast("Added")},
+ addtog:async v=>{await setDoc(doc(db,"groups",document.getElementById("atg").value),{members:arrayUnion(v)},{merge:true});toast("Added to group")},
+ buy:v=>{const it=ITEMS.find(x=>x[0]==v),m=me();if((m.coins||0)<it[1]||(m.owned||[]).includes(v))return;saveMe({coins:increment(-it[1]),owned:arrayUnion(v),title:v});toast("Bought "+v)},
+ equip:v=>saveMe({title:me().title==v?"":v}),
  addq:()=>{readEdit();edit.quiz.push({q:"",o:["","","",""],a:0});render()},rmq:v=>{readEdit();edit.quiz.splice(+v,1);render()},
  pick:v=>{if(qz.sub)return;const[i,j]=v.split(":").map(Number);qz.ans[i]=j;render()},
  submitq:()=>{const c=courses.find(x=>x.id==cid),Q=c.quiz,sc=Q.filter((x,i)=>qz.ans[i]===x.a).length,need=Math.ceil(Q.length*(c.pass||70)/100);qz.sub=true;
@@ -279,7 +352,7 @@ const A={
  like:v=>{const id=v+"_"+user.uid;liked(v)?deleteDoc(doc(db,"likes",id)):setDoc(doc(db,"likes",id),{c:v,u:user.uid})},
  thread:v=>{openPost=openPost==v?null:v;render()},delp:v=>deleteDoc(doc(db,"posts",v)),
  grp:v=>{gid=v;render()},delg:async v=>{if(confirm("Delete this group?")){await deleteDoc(doc(db,"groups",v));gid=null}},
- preset:v=>{const t=THEMES[v];Object.assign(theme,{brand:t[0],bg:t[1],card:t[2],ink:t[3]});applyTheme();render()},
+ preset:v=>{themePick=v;applyTheme();saveMe({themePick:v});render()},
  delcourse:async()=>{if(confirm("Delete this course for everyone?")){await deleteDoc(doc(db,"courses",edit.id));modal=null;view="home";render()}},
  run:async()=>{const k=cid+":"+li,l=courses.find(x=>x.id==cid).lessons[li],code=document.getElementById("cd"+cid+"_"+li).value;
   run={k,out:"",ok:null,busy:true};render();const out=[];
@@ -317,23 +390,30 @@ const A={
    Q("How many squares can a king move per turn (ignoring castling)?",["One","Two","Any number in a line","Up to three"],0),Q("The queen combines the movement of which two pieces?",["Rook and knight","Bishop and knight","Rook and bishop","King and rook"],2),
    Q("How far may a white pawn move on its first move?",["Only 1 square","1 or 2 squares","Up to 3 squares","Any number"],1),Q("A knight on e4 can move to which of these squares?",["e6","g5","e5","h4"],1),
    Q("A rook on a1 on an empty board can move to which square?",["b2","a8","c3","b3"],1),Q("Which statement about pawns is true?",["They move diagonally to go forward","They never move backward","They move like bishops","They can move in any direction"],1)]}];
+  S.push(...MORE);
   for(const o of courses.filter(x=>S.some(y=>y.title==x.title)))await deleteDoc(doc(db,"courses",o.id));
   for(const x of S)await addDoc(collection(db,"courses"),x);toast("Added")}};
 document.addEventListener("keydown",e=>{if(e.key=="Tab"&&!e.shiftKey&&e.target.classList?.contains("code")){e.preventDefault();const t=e.target;t.setRangeText("    ",t.selectionStart,t.selectionEnd,"end")}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&A[b.dataset.a]){e.preventDefault();A[b.dataset.a](b.dataset.v)}});
-document.addEventListener("input",e=>{const t=e.target.dataset.t;if(!t)return;theme[t]=t=="radius"?+e.target.value:e.target.value;applyTheme();if(t=="font")render()});
+document.addEventListener("input",e=>{if(e.target.id=="pq"){pq=e.target.value;render();return}if(e.target.dataset.t=="radius"){radius=+e.target.value;applyTheme()}});
 document.addEventListener("change",e=>{const f=e.target.files?.[0];if(e.target.id!="pf"||!f)return;const im=new Image();
  im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=128;const s=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);saveMe({pfp:c.toDataURL("image/jpeg",.8)});toast("Photo updated")};im.src=URL.createObjectURL(f)});
 document.addEventListener("submit",async e=>{e.preventDefault();const id=e.target.id,g=i=>document.getElementById(i),v=i=>g(i).value.trim();
  try{
  if(id=="authF"){const er=g("err");er.textContent="";
-  if(mode=="up"){if(age(g("bd").value)<13)return er.textContent="You must be 13 or older.";if(!picked.length)return er.textContent="Pick at least one topic."}
-  try{if(mode=="up"){const c=await signUp(auth,v("em"),g("pw").value);await setDoc(doc(db,"users",c.user.uid),{name:v("nm"),bday:g("bd").value,interests:picked,pronouns:"",bio:"",pfp:"",done:[],log:[],coins:0,w:{},joined:Date.now()})}else await signIn(auth,v("em"),g("pw").value)}
+  try{if(mode=="up"){const un=v("un").toLowerCase();
+    if(age(g("bd").value)<13)return er.textContent="You must be 13 or older.";if(!picked.length)return er.textContent="Pick at least one topic.";
+    if(!unOk(un))return er.textContent="Username must be 3-20 letters, numbers or underscores.";if((await getDoc(doc(db,"usernames",un))).exists())return er.textContent="That username is taken.";
+    const c=await signUp(auth,v("em"),g("pw").value);await setDoc(doc(db,"usernames",un),{uid:c.user.uid});
+    await setDoc(doc(db,"users",c.user.uid),{name:v("nm"),username:un,bday:g("bd").value,interests:picked,pronouns:"",bio:"",pfp:"",title:"",owned:[],done:[],log:[],coins:0,w:{},joined:Date.now()})}
+   else await signIn(auth,v("em"),g("pw").value)}
   catch(x){er.textContent={"auth/email-already-in-use":"That email already has an account.","auth/invalid-credential":"Email or password is wrong.","auth/weak-password":"Use 6+ characters."}[x.code]||"Something went wrong."}}
- if(id=="meF"){await saveMe({name:v("pn"),pronouns:v("pr"),bio:v("pb")});toast("Saved")}
+ if(id=="meF"){const er=g("err");er.textContent="";const un=g("pu")?v("pu").toLowerCase():"";
+  if(un){if(!unOk(un))return er.textContent="Username must be 3-20 letters, numbers or underscores.";if((await getDoc(doc(db,"usernames",un))).exists())return er.textContent="That username is taken.";await setDoc(doc(db,"usernames",un),{uid:user.uid});await saveMe({username:un})}
+  await saveMe({name:v("pn"),pronouns:v("pr"),bio:v("pb")});toast("Saved")}
  if(id=="poF"&&v("pt")){await addDoc(collection(db,"posts"),{uid:user.uid,text:v("pt"),at:Date.now(),parent:""});g("pt").value=""}
  if(id=="rpF"&&v("rt")){await addDoc(collection(db,"posts"),{uid:user.uid,text:v("rt"),at:Date.now(),parent:openPost});g("rt").value=""}
- if(id=="gpF"){const r=await addDoc(collection(db,"groups"),{name:v("gn"),desc:v("gd"),owner:user.uid,at:Date.now()});gid=r.id;g("gn").value=g("gd").value="";render()}
+ if(id=="gpF"){const mem=[user.uid,...friendsList().filter(u=>g("gf"+u.id)?.checked).map(u=>u.id)];const r=await addDoc(collection(db,"groups"),{name:v("gn"),owner:user.uid,members:mem,at:Date.now()});gid=r.id;modal=null;view="chat";render()}
  if(id=="mgF"&&v("mt")){await addDoc(collection(db,"msgs"),{gid,uid:user.uid,text:v("mt"),at:Date.now()});g("mt").value=""}
  if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value});modal=null;toast("Saved");render()}
  if(id=="edF"){readEdit();const{id:eid,...d}=edit;d.order=+d.order||0;d.mins=+d.mins||5;d.lessons=d.lessons.filter(l=>l.t.trim());d.pass=+d.pass||70;
