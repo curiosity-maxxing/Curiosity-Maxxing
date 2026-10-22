@@ -137,6 +137,15 @@ body{font-size:14.5px;line-height:1.5}h1{font-size:1.5rem}h2{font-size:1.15rem}h
 @keyframes bounce{30%{transform:translateY(-9px) scale(1.07)}60%{transform:translateY(0)}80%{transform:translateY(-3px)}}
 .hintbar{background:var(--soft);border:1px solid var(--line);border-radius:var(--radius);padding:7px 12px;margin-bottom:10px;gap:10px}
 .sq.hint{outline:2px dashed var(--brand);outline-offset:-3px;animation:pulse 1s ease-in-out infinite}@keyframes pulse{50%{outline-color:transparent}}
+.wrap{max-width:1680px;padding:10px clamp(14px,3.2vw,56px) 60px}.box p,.pcard p{max-width:78ch}
+.scrim{background:rgba(0,0,0,.35)}
+.drawer{width:min(310px,88vw);padding:16px 14px;gap:0;box-shadow:0 0 40px rgba(0,0,0,.18)}
+.dhead{display:flex;align-items:center;gap:10px;padding:4px 4px 14px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.dsec{font:500 .7rem 'JetBrains Mono',monospace;color:var(--muted);margin:16px 10px 4px}
+.dl{display:flex;justify-content:space-between;align-items:center;width:100%;padding:9px 12px;border-radius:var(--radius);border-left:2px solid transparent;font-size:.92rem;border-bottom:0}
+.dl:hover{background:var(--soft)}.dl.on{background:var(--soft);border-left-color:var(--brand);font-weight:600}
+.dout{margin-top:auto;width:100%;text-align:center}
+button.tag{cursor:pointer;color:inherit}button.tag:hover{border-color:var(--brand)}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:var(--radius);font-size:.88rem;z-index:9}
 </style>
 </head>
@@ -156,7 +165,7 @@ const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(auth.app);
 const TOPICS=["Coding","Politics","News","Chess","Writing","Science","History","Money"],LEVELS=["Beginner","Intermediate","Advanced"];
 const THEMES={Mono:["#ffffff","#0a0a0b","#131315","#ececec"],Paper:["#111111","#f3f3f4","#ffffff","#111111"],Pink:["#e07fa6","#fff5f9","#ffffff","#3a2230"],Blue:["#6c9bd8","#f3f8ff","#ffffff","#1d2f47"],Green:["#5db487","#f2fbf6","#ffffff","#1c3a2b"],Lilac:["#9a86e0","#f6f3ff","#ffffff","#2a2347"],Peach:["#e8956f","#fff6f1","#ffffff","#45291c"],Yellow:["#d4a83a","#fffbec","#ffffff","#43391a"],Teal:["#4fb8b0","#f0fbfa","#ffffff","#18393a"]};
 const COLORS=["Pink","Blue","Green","Lilac","Peach","Yellow","Teal"];
-let menu=false,hatch=null,credits=[],calM=0,showCr=false,lbScope="all",lbMetric="courses",fLen="any",fLvl="any",fSt="any",msgMap={},gSubs={},reports=[],notifs=[],drops=[],notifOpen=false,fromCourse=false,petTap=0,acct="",hintTxt={k:"",t:""};
+let menu=false,hatch=null,credits=[],calM=0,showCr=false,lbScope="all",lbMetric="courses",fLen="any",fLvl="any",fSt="any",msgMap={},gSubs={},reports=[],notifs=[],drops=[],notifOpen=false,fromCourse=false,petTap=0,acct="",hintTxt={k:"",t:"",n:0},lastAct=0,repT="",prevNav=null,prevHtml="",showPrev=false;
 let qz={k:"",ans:{},sub:false};
 let ch=null,run={k:"",out:"",ok:null,busy:false};
 let user,courses=[],users=[],posts=[],groups=[],msgs=[],likes=[],friends=[],puid=null,pq="",site={},view="home",tab="feed",gid=null,openPost=null,cid=null,li=0,modal=null,edit=null,filter="For you",mode="login",picked=[],unsubs=[];
@@ -186,8 +195,9 @@ const locked=(c,i)=>!isAdmin()&&!(c.lessons||[]).slice(0,i).every((_,j)=>(me().d
 const score=c=>{const m=me(),k=(c.category||"").toLowerCase(),p=prog(c);return((m.interests||[]).some(i=>i.toLowerCase()==k)?6:0)+((m.w||{})[c.category]||0)+(c.featured?1:0)-(p.n&&p.d==p.n?20:0)};
 const likeN=id=>likes.filter(l=>l.c==id).length,liked=id=>likes.some(l=>l.id==id+"_"+user.uid);
 const GL={king:"\u265A",queen:"\u265B",rook:"\u265C",bishop:"\u265D",knight:"\u265E",pawn:"\u265F"};
-const bl=()=>({t:"",b:"",l:"",type:"text",piece:"rook",rounds:4,code:"",expect:"",hint:""});
-const gated=l=>l.type=="chess"||(l.type=="code"&&l.expect);
+const bl=()=>({t:"",b:"",l:"",type:"text",piece:"rook",rounds:4,code:"",expect:"",hint:"",html:""});
+const gatedCustom=l=>/type\s*:\s*["']complete["']/.test(l.html||"");
+const gated=l=>l.type=="chess"||(l.type=="code"&&l.expect)||(l.type=="custom"&&gatedCustom(l));
 const complete=()=>{if(!(me().done||[]).includes(key(cid,li)))A.done()};
 const legal=(p,a,b)=>{const dx=(b&7)-(a&7),dy=(b>>3)-(a>>3),x=Math.abs(dx),y=Math.abs(dy);
  return !!({rook:!dx||!dy,bishop:x==y,queen:!dx||!dy||x==y,knight:x+y==3&&x&&y,king:Math.max(x,y)==1,pawn:!dx&&(dy==-1||(dy==-2&&(a>>3)==6))}[p])&&a!=b};
@@ -218,12 +228,15 @@ const friendsList=()=>users.filter(u=>u.id!=user.uid&&u.name&&isFriend(u.id));
 const THREAT=/(kill|murder|shoot|stab|hurt|beat)\s*(you|u|ya|your\s*family)|kill\s*(yourself|urself)|\bk\s*y\s*s\b|go\s*die|hope\s*you\s*die|you\s*should\s*die|i\s*(ll|will|am going to|m going to)\s*find\s*you/i;
 const ABUSE=/piece\s*of\s*(shit|trash|garbage)|worthless|waste\s*of\s*(space|oxygen)|nobody\s*(likes|loves|wants)\s*you|everyone\s*hates\s*you|\bretard/i;
 const blocked=t=>{const b=t.toLowerCase().replace(/[^a-z0-9\s]/g," ");for(const x of[b,b.replace(/(.)\1+/g,"$1"),b.replace(/(.)\1{2,}/g,"$1$1")]){if(THREAT.test(x))return"That looks like a threat, so it was not sent.";if(ABUSE.test(x))return"That is too harsh for this community, so it was not sent."}return""};
-const incoming=()=>friends.filter(f=>f.b==user.uid&&!fr(user.uid,f.a));
+const incoming=()=>friends.filter(f=>f.b==user.uid&&!fr(user.uid,f.a)&&!isBlocked(f.a));
 const gOther=g=>g.dm?users.find(u=>u.id==g.members.find(x=>x!=user.uid)):null;
 const gTitle=g=>g.dm?(gOther(g)?.name||"Chat"):g.name,gAv=(g,s)=>g.dm?av(gOther(g),s):av({name:g.name,group:1},s);
+const retry={};
 function syncMsgs(){const ids=new Set(groups.map(g=>g.id));for(const id in gSubs)if(!ids.has(id)){gSubs[id]();delete gSubs[id];delete msgMap[id]}
- for(const id of ids)if(!gSubs[id])gSubs[id]=onSnapshot(query(collection(db,"msgs"),where("gid","==",id)),sn=>{msgMap[id]=sn.docs.map(d=>({id:d.id,...d.data()}));msgs=Object.values(msgMap).flat().sort((a,b)=>b.at-a.at);render()},e=>console.error(e))}
-const notify=(to,type,text,o={})=>{if(!to||to==user.uid)return;setDoc(doc(db,"notifs",o.id||type+"_"+to+"_"+Date.now()),{to,from:user.uid,type,text:text.slice(0,200),gid:o.gid||"",at:Date.now(),read:false}).catch(()=>{})};
+ for(const g of groups){const id=g.id;if(gSubs[id]||g._p)continue;
+  gSubs[id]=onSnapshot(query(collection(db,"msgs"),where("gid","==",id)),sn=>{retry[id]=0;msgMap[id]=sn.docs.map(d=>({id:d.id,...d.data()}));msgs=Object.values(msgMap).flat().sort((a,b)=>b.at-a.at);render()},
+   e=>{console.error(e);delete gSubs[id];if((retry[id]=(retry[id]||0)+1)<6)setTimeout(syncMsgs,1500*retry[id])})}}
+const notify=(to,type,text,o={})=>{if(!to||to==user.uid||(users.find(u=>u.id==to)?.blocked||[]).includes(user.uid))return;setDoc(doc(db,"notifs",o.id||type+"_"+to+"_"+Date.now()),{to,from:user.uid,type,text:text.slice(0,200),gid:o.gid||"",at:Date.now(),read:false}).catch(()=>{})};
 const NP=t=>({like:"like",reply:"reply",msg:"msg",group:"msg",friend:"friend",friend_ok:"friend",drop:"drop"}[t]||"msg");
 const allNotifs=()=>{const m=me(),np=m.np||{},dr=m.dropRead||[],j=m.joined||0;
  const a=notifs.map(n=>({...n,unread:!n.read})),d=drops.filter(x=>x.at>j).map(x=>({id:"drop_"+x.id,type:"drop",text:"New course: "+x.title,at:x.at,cid:x.cid,drop:true,unread:!dr.includes(x.id),from:""}));
@@ -231,7 +244,27 @@ const allNotifs=()=>{const m=me(),np=m.np||{},dr=m.dropRead||[],j=m.joined||0;
 const unreadN=()=>allNotifs().filter(n=>n.unread).length;
 const notifPanel=()=>{const L=allNotifs();return`<div class="scrim" data-a="ntoggle"></div><div class="npanel" role="dialog" aria-label="Notifications"><div class="row" style="margin-bottom:6px"><b>Notifications</b><span class="sp"></span><button class="btn s" data-a="markall">Mark all read</button><button class="btn s" data-a="ntoggle" aria-label="Close">x</button></div>
  ${L.map(n=>{const u=users.find(x=>x.id==n.from);return`<button class="nitem ${n.unread?"un":""}" data-a="nclick" data-v="${n.id}">${n.drop?`<span class="av" style="width:30px;height:30px;font-size:.62rem">new</span>`:av(u,30)}<span style="flex:1"><span>${esc(n.text)}</span><br><span class="k">${ago(n.at)}</span></span></button>`}).join("")||'<p class="k">You are all caught up.</p>'}</div>`};
-const hintBar=()=>`<div class="row hintbar"><span class="chip"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:-2px"><circle cx="12" cy="10" r="6" fill="#ffe27a" stroke="#d9b13b"/><rect x="9.5" y="16" width="5" height="3" fill="#cfd4db"/></svg> Hints: <b>${me().hints||0}</b></span><button class="btn s" data-a="usehint">Use a hint</button><span class="k">Quiz: removes two wrong answers. Chess: marks a legal square. Challenge: a nudge.</span></div>`;
+const isBlocked=id=>(me().blocked||[]).includes(id),blockedMe=id=>(users.find(u=>u.id==id)?.blocked||[]).includes(user.uid);
+const REASONS=["Harassment or bullying","Threats or violence","Hate speech","Sexual or inappropriate content","Spam or scam","Self-harm concern","Inappropriate picture","Something else"];
+const TIP={rook:"A rook slides in straight lines, so stay on the same row or column.",bishop:"A bishop slides diagonally. Look for squares on a diagonal line.",knight:"A knight jumps in an L: two squares one way, then one square sideways.",queen:"The queen moves like a rook and a bishop combined: straight lines or diagonals.",king:"The king moves exactly one square in any direction.",pawn:"A white pawn moves straight up one square. From its starting row it may move two."};
+const codeHint=(l,code,out,n)=>{const o=(out||"").trim(),a=[];
+ if(/\bpass\b/.test(code)&&!/\breturn\b/.test(code))a.push("You still have the placeholder pass. Replace it with your own code, most likely a return statement.");
+ else if(/\bdef\b/.test(code)&&!/\breturn\b/.test(code))a.push("Your function never uses return, so it gives back None. Use return to send the result back.");
+ if(/^None$/m.test(o))a.push("The output is None, which means your function returned nothing. Check your return line.");
+ if(/(SyntaxError|IndentationError|NameError|TypeError|ZeroDivisionError)/.test(o))a.push("Python reported: "+o.split("\n").slice(-1)[0]+". Check spelling, brackets, quotes and indentation (4 spaces).");
+ else if(o&&l.expect&&o!=l.expect.trim()){const x=o.split("\n"),y=l.expect.trim().split("\n"),i=y.findIndex((v,j)=>v!==x[j]);a.push("Your code printed "+x.length+" line(s) and the task expects "+y.length+". Line "+(i+1)+" differs: you printed \""+(x[i]??"nothing")+"\" but it should be \""+y[i]+"\".")}
+ const all=[...a,...(l.hint||"").split("|").map(x=>x.trim()).filter(Boolean)];return all.length?all[Math.min(n-1,all.length-1)]:"Re-read the task, run your code, and compare the output with what it asks for."};
+const hintable=()=>{const c=courses.find(x=>x.id==cid);if(!c)return false;const ls=c.lessons||[];if(hasQ(c)&&li>=ls.length)return false;const l=ls[li]||{};return l.type=="chess"||(l.type=="code"&&!!l.expect)||(l.type=="custom"&&gatedCustom(l))};
+const hintBar=()=>hintable()?`<div class="row hintbar"><span class="chip"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:-2px"><circle cx="12" cy="10" r="6" fill="#ffe27a" stroke="#d9b13b"/><rect x="9.5" y="16" width="5" height="3" fill="#cfd4db"/></svg> Hints: <b>${isAdmin()?"∞":(me().hints||0)}</b></span><button class="btn s" data-a="usehint">Use a hint</button><span class="k">Hints are for challenges. They are not available in quizzes.</span></div>`:"";
+const PROMPT=d=>"Write ONE self-contained HTML snippet (HTML, CSS and JavaScript together, no external libraries and no network requests) for an interactive lesson activity on a learning website.\n\nWhat I want: "+d+"\n\nRequirements:\n- Works on phones and desktops, clean minimal look, font-family: inherit, transparent or white background, accessible (labels, keyboard support).\n- When the learner completes the challenge correctly, run: window.parent.postMessage({type:'complete'},'*')\n- If it is a challenge, listen for hints: window.addEventListener('message',function(e){if(e.data&&e.data.type==='hint'){/* show a specific, helpful hint, e.data.text may contain the lesson author's hint */}})\n- After layout, run window.parent.postMessage({type:'height',h:document.documentElement.scrollHeight},'*') so the frame fits.\n- If it is only a demo (no challenge), do not send the complete message.\nReturn only the code in a single code block.";
+let nsfwP=null;
+const addScript=src=>new Promise((ok,no)=>{const t=document.createElement("script");t.src=src;t.onload=ok;t.onerror=()=>no(new Error("load "+src));document.head.append(t)});
+const loadNsfw=()=>nsfwP||(nsfwP=addScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js").then(()=>addScript("https://cdn.jsdelivr.net/npm/nsfwjs@4.2.1/dist/browser/nsfwjs.min.js").catch(()=>addScript("https://cdn.jsdelivr.net/npm/nsfwjs@4.2.1/dist/nsfwjs.min.js"))).then(()=>window.nsfwjs.load()).catch(e=>{nsfwP=null;throw e}));
+const screenImg=async cv=>{try{const m=await loadNsfw(),pr=await m.classify(cv),g=n=>(pr.find(x=>x.className==n)||{probability:0}).probability;
+ return g("Porn")<.4&&g("Hentai")<.5&&g("Sexy")<.6?"":"That picture was blocked by the safety check."}catch(e){console.error(e);return"The picture safety check is unavailable right now, so the picture was not saved. Try again later."}};
+const customBox=l=>`<iframe class="custom" sandbox="allow-scripts" srcdoc="${esc(l.html||"")}" title="Interactive activity" style="width:100%;height:380px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;margin-top:12px"></iframe>`;
+const reportModal=()=>`<div class="modal"><div class="sheet" style="max-width:440px"><div class="row"><h2>Report</h2><button class="btn s sp" data-a="x" aria-label="Close">x</button></div><form id="rpt" style="margin-top:12px"><div class="f"><label for="rr">Reason</label><select id="rr">${REASONS.map(r=>`<option>${r}</option>`).join("")}</select></div><div class="f"><label for="rd">Tell us more (optional, or write your own complaint)</label><textarea id="rd" maxlength="500"></textarea></div><button class="btn p">Send to the owner</button></form></div></div>`;
+const previewModal=()=>`<div class="modal" style="z-index:9"><div class="sheet" style="max-width:720px"><div class="row"><h2>Preview</h2><button class="btn s sp" data-a="closeprev">Close preview</button></div><iframe class="prevframe" sandbox="allow-scripts" srcdoc="${esc(prevHtml)}" title="Preview" style="width:100%;height:420px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;margin-top:10px"></iframe></div></div>`;
 const noHintModal=()=>`<div class="modal"><div class="sheet" style="max-width:360px;text-align:center"><div class="row"><span class="sp"></span><button class="btn s" data-a="x" aria-label="Close">x</button></div>${hintSvg}<h2>Out of hints</h2><p class="k">You don't have any hints left. Grab some in the shop, then come back to your course.</p><button class="btn p" data-a="toshop">Go to the shop</button></div></div>`;
 const unOk=u=>/^[a-z0-9_]{3,20}$/.test(u);
 const ITEMS=[["Scholar",50],["Night owl",75],["Bookworm",100],["Streak keeper",150],["Chess master",200],["Legend",400]];
@@ -280,13 +313,13 @@ const SHOP=[{id:"hint",kind:"hint",name:"Hint",desc:"Removes two wrong answers o
  {id:"egg3",kind:"egg",r:"legendary",name:"Legendary egg",desc:"Hatches a legendary or ultra legendary pet.",odds:[["legendary",85],["ultra legendary",15]],price:500}];
 function autoFreeze(){const m=me(),have=new Set([...(m.log||[]).map(x=>x.split("|")[0]),...(m.frozen||[])]),d1=new Date();d1.setDate(d1.getDate()-1);const d2=new Date(d1);d2.setDate(d2.getDate()-1);
  if(!have.has(day())&&!have.has(day(d1))&&have.has(day(d2))&&(m.freezes||0)>0){saveMe({frozen:arrayUnion(day(d1)),freezes:increment(-1)});toast("A streak freeze saved your streak")}}
-const av=(u,s)=>u?.pfp?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:u?.group?`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u.name||"?")[0]).toUpperCase()}</div>`:`<div class="av" style="width:${s}px;height:${s}px;overflow:hidden"><svg viewBox="0 0 40 40" width="100%" height="100%" role="img" aria-label="Default profile picture"><rect width="40" height="40" fill="#cfd4db"/><circle cx="20" cy="15.5" r="7" fill="#fff"/><path d="M4 40c0-9.5 7-14.5 16-14.5S36 30.5 36 40z" fill="#fff"/></svg></div>`;
+const av=(u,s)=>u?.pfp&&/^data:image\/jpeg;base64,/.test(u.pfp)?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:u?.group?`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u.name||"?")[0]).toUpperCase()}</div>`:`<div class="av" style="width:${s}px;height:${s}px;overflow:hidden"><svg viewBox="0 0 40 40" width="100%" height="100%" role="img" aria-label="Default profile picture"><rect width="40" height="40" fill="#cfd4db"/><circle cx="20" cy="15.5" r="7" fill="#fff"/><path d="M4 40c0-9.5 7-14.5 16-14.5S36 30.5 36 40z" fill="#fff"/></svg></div>`;
 
 /* ---------- data ---------- */
 onAuthStateChanged(auth,u=>{user=u;unsubs.forEach(f=>f());unsubs=[];
  if(u){const L=(q,fn)=>unsubs.push(onSnapshot(q,s=>{fn(s.docs.map(d=>({id:d.id,...d.data()})));render()},e=>console.error(e)));
   L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);L(collection(db,"users"),x=>{users=x;if(!tsync&&me().name){tsync=1;if(me().themePick){themePick=me().themePick;applyTheme()}autoFreeze();if(me().deactivated){saveMe({deactivated:false});toast("Welcome back. Your account is active again.")}}});
-  L(query(collection(db,"posts"),orderBy("at","desc"),limit(200)),x=>posts=x);L(query(collection(db,"groups"),where("members","array-contains",u.uid)),x=>{groups=x.sort((a,b)=>b.at-a.at);syncMsgs()});
+  L(query(collection(db,"posts"),orderBy("at","desc"),limit(200)),x=>posts=x);unsubs.push(onSnapshot(query(collection(db,"groups"),where("members","array-contains",u.uid)),{includeMetadataChanges:true},s=>{groups=s.docs.map(d=>({id:d.id,...d.data(),_p:d.metadata.hasPendingWrites})).sort((a,b)=>b.at-a.at);syncMsgs();render()},e=>console.error(e)));
   L(collection(db,"likes"),x=>likes=x);L(collection(db,"friends"),x=>friends=x);L(collection(db,"credits"),x=>credits=x);if(u.uid===ADMIN_UID)L(collection(db,"reports"),x=>reports=x);L(query(collection(db,"notifs"),where("to","==",u.uid)),x=>notifs=x);L(collection(db,"drops"),x=>drops=x);
   unsubs.push(onSnapshot(doc(db,"settings","site"),s=>{site=s.data()||{};render()}));
  }else{Object.values(gSubs).forEach(f=>f());gSubs={};msgMap={};msgs=[];groups=[];notifs=[];drops=[];notifOpen=false;courses=[];users=[];view="home";themePick="auto";tsync=0;applyTheme()}
@@ -298,11 +331,13 @@ const logo=()=>{const w=(site.name||"curiosity maxxing").toLowerCase().split(" "
 const nav=()=>`<header class="top"><div class="row" style="gap:2px"><button class="burger" data-a="menu" aria-label="Open menu" aria-expanded="${menu}"><span></span><span></span><span></span></button>
  <button class="burger" data-a="ntoggle" aria-label="Notifications${unreadN()?", "+unreadN()+" unread":""}" aria-expanded="${notifOpen}"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 17V11a6 6 0 1 1 12 0v6l1.5 2h-15z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>${unreadN()?`<i class="nbadge">${Math.min(unreadN(),99)}</i>`:""}</button></div>
  <button class="lnk logo" data-a="go" data-v="home" style="margin:0">${logo()}</button>
- <div class="row" style="gap:8px"><button class="btn coinchip" data-a="go" data-v="shop" aria-label="Coins. Open the shop">${coin(16)} <b>${me().coins||0}</b></button><button class="lnk" data-a="go" data-v="me" aria-label="Your profile">${av(me(),34)}</button></div></header>${menu?drawer():""}${notifOpen?notifPanel():""}`;
-const drawer=()=>`<div class="scrim" data-a="menu"></div><aside class="drawer" role="dialog" aria-label="Menu"><div class="row" style="margin-bottom:8px"><b>Menu</b><button class="btn s sp" data-a="menu">Close</button></div>
- ${[["home","Courses"],["comm","Community"+(incoming().length?" ("+incoming().length+")":"")],["shop","Shop"],["me","Profile"],["fame","Hall of fame"],["set","Settings"],["about","About the website"]].map(([v,n])=>`<button class="dl ${view==v?"on":""}" data-a="go" data-v="${v}">${n}</button>`).join("")}
- ${isAdmin()?`<hr class="hr"><button class="dl" data-a="go" data-v="reports">Reports (${reports.length})</button><button class="dl" data-a="new">New course</button><button class="dl" data-a="site">Site settings</button>`:""}
- <button class="dl" data-a="out" style="margin-top:auto;color:#e5646f;border-top:1px solid var(--line);border-radius:0">Log out</button></aside>`;
+ <div class="row" style="gap:8px"><button class="btn coinchip" data-a="go" data-v="shop" aria-label="Coins. Open the shop">${coin(16)} <b>${isAdmin()?"∞":(me().coins||0)}</b></button><button class="lnk" data-a="go" data-v="me" aria-label="Your profile">${av(me(),34)}</button></div></header>${menu?drawer():""}${notifOpen?notifPanel():""}`;
+const drawer=()=>{const m=me(),it=(v,n,c)=>`<button class="dl ${view==v?"on":""}" data-a="go" data-v="${v}"><span>${n}</span>${c?`<span class="pill">${c}</span>`:""}</button>`;
+ return`<div class="scrim" data-a="menu"></div><aside class="drawer" role="dialog" aria-label="Menu"><div class="dhead">${av(m,40)}<div style="flex:1;min-width:0"><b>${esc(m.name||"You")}</b><div class="k">${m.username?"@"+esc(m.username):""}</div></div><button class="btn s" data-a="menu" aria-label="Close menu">x</button></div>
+ <div class="dsec">Explore</div>${it("home","Courses")}${it("comm","Community",incoming().length||"")}${it("shop","Shop")}${it("fame","Hall of fame")}
+ <div class="dsec">You</div>${it("me","Profile")}${it("set","Settings")}${it("about","About the website")}
+ ${isAdmin()?`<div class="dsec">Owner</div>${it("reports","Reports",reports.length||"")}<button class="dl" data-a="new"><span>New course</span></button><button class="dl" data-a="site"><span>Site settings</span></button>`:""}
+ <button class="btn d dout" data-a="out">Log out</button></aside>`};
 
 const authView=()=>{const s=mode=="up";return`<div class="land"><div class="logo">${logo()}</div><h1>Learn one small thing at a time.</h1><p>Short courses on code, politics, chess and more. Build a streak, earn coins, make friends and learn together.</p></div>
  <div class="auth box"><h2>${s?"Create your account":"Log in"}</h2><form id="authF" style="margin-top:14px">
@@ -342,7 +377,7 @@ function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class=
  <div class="two"><div>${ls.map((x,i)=>{const lk=locked(c,i),y=d.includes(key(c.id,i));return`<button class="les ${i==li?"cur":""}" data-a="les" data-v="${i}" ${lk?"disabled":""}><span class="dot ${y?"y":""}">${y?"ok":lk?"-":i+1}</span>${esc(x.t)}</button>`}).join("")}
  ${q?`<button class="les ${isQ?"cur":""}" data-a="les" data-v="${ls.length}" ${locked(c,ls.length)?"disabled":""}><span class="dot ${passed?"y":""}">${passed?"ok":locked(c,ls.length)?"-":"Q"}</span>Final quiz</button>`:""}
  <p class="k">Finish each step to unlock the next.</p></div>
- <div class="box" style="margin-top:8px">${hintBar()}${buddyBox()}${isQ?quizBox(c,passed):`<h2>${esc(l.t)}</h2>${fmt(l.b)}${l.type=="code"?codeBox(l):l.type=="chess"?chessBox():""}
+ <div class="box" style="margin-top:8px">${hintBar()}${buddyBox()}${isQ?quizBox(c,passed):`<h2>${esc(l.t)}</h2>${fmt(l.b)}${l.type=="code"?codeBox(l):l.type=="chess"?chessBox():l.type=="custom"?customBox(l):""}
  ${l.l?`<p><a class="btn s" href="${esc(l.l)}" target="_blank" rel="noopener" style="text-decoration:none">Open resource</a></p>`:""}
  <div class="row" style="margin-top:14px">${gated(l)?`<span class="k">${dn?"Lesson completed":"Finish the challenge above to complete this lesson."}</span>`:`<button class="btn p" data-a="done">${dn?"Undo":"Mark as done (+10 coins)"}</button>`}
  <button class="btn s" data-a="les" data-v="${li-1}" ${li?"":"disabled"}>Prev</button><button class="btn s" data-a="les" data-v="${li+1}" ${li<max&&(dn||isAdmin())?"":"disabled"}>Next</button></div>`}</div></div>`}
@@ -350,35 +385,37 @@ function course(){const c=courses.find(x=>x.id==cid);if(!c)return`<button class=
 const nmBtn=(u,id)=>`<button class="lnk" data-a="user" data-v="${id}">${esc(u?.name||"user")}</button>`;
 const who=(u,id,t)=>`${nmBtn(u,id)} <span class="k">${u?.pronouns?esc(u.pronouns)+" ":""}- ${ago(t)}</span>`;
 const avBtn=(u,id,s)=>`<button class="lnk" data-a="user" data-v="${id}" aria-label="${esc(u?.name||"user")}">${av(u,s)}</button>`;
-function postHtml(p){const u=users.find(x=>x.id==p.uid),rs=posts.filter(x=>x.parent==p.id).reverse(),del=x=>(isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delp" data-v="${x.id}">Delete</button>`:"")+(x.uid!=user.uid?`<button class="btn s" data-a="report" data-v="post:${x.id}">Report</button>`:"");
+function postHtml(p){const u=users.find(x=>x.id==p.uid),rs=posts.filter(x=>x.parent==p.id&&!isBlocked(x.uid)).reverse(),del=x=>(isAdmin()||x.uid==user.uid?`<button class="btn s d" data-a="delp" data-v="${x.id}">Delete</button>`:"")+(x.uid!=user.uid?`<button class="btn s" data-a="report" data-v="post:${x.id}">Report</button>`:"");
  return`<div class="box"><div class="row">${avBtn(u,p.uid,36)}<div>${who(u,p.uid,p.at)}</div><span class="sp">${del(p)}</span></div><p style="margin:10px 0;white-space:pre-wrap">${esc(p.text)}</p>
  <div class="row"><button class="btn s ${liked(p.id)?"p":""}" data-a="like" data-v="${p.id}">Like ${likeN(p.id)}</button><button class="btn s" data-a="thread" data-v="${p.id}">Replies ${rs.length}</button></div>
  ${openPost==p.id?`<div style="margin-top:12px">${rs.map(r=>{const w=users.find(x=>x.id==r.uid);return`<div class="cm">${avBtn(w,r.uid,28)}<div style="flex:1">${who(w,r.uid,r.at)}<div>${esc(r.text)}</div><button class="btn s ${liked(r.id)?"p":""}" data-a="like" data-v="${r.id}">Like ${likeN(r.id)}</button></div>${del(r)}</div>`}).join("")}
  <form id="rpF" class="row" style="margin-top:10px"><input id="rt" maxlength="500" placeholder="Write a reply" style="flex:1"><button class="btn p">Reply</button></form></div>`:""}</div>`}
 
-const feed=()=>`<form id="poF" class="box"><textarea id="pt" maxlength="500" placeholder="Say what's on your mind"></textarea><div class="row" style="margin-top:8px"><span class="k">max 500 characters</span><button class="btn p sp">Post</button></div></form>${posts.filter(p=>!p.parent).map(postHtml).join("")||'<p class="k">No posts yet. Start the conversation.</p>'}`;
+const feed=()=>`<form id="poF" class="box"><textarea id="pt" maxlength="500" placeholder="Say what's on your mind"></textarea><div class="row" style="margin-top:8px"><span class="k">max 500 characters</span><button class="btn p sp">Post</button></div></form>${posts.filter(p=>!p.parent&&!isBlocked(p.uid)).map(postHtml).join("")||'<p class="k">No posts yet. Start the conversation.</p>'}`;
 
 function chats(){const gs=groups.map(g=>({g,m:msgs.find(m=>m.gid==g.id)})).sort((a,b)=>(b.m?.at||b.g.at)-(a.m?.at||a.g.at));
  return`<div class="row" style="margin:12px 0"><button class="btn p" data-a="newgroup">New group</button></div>
  ${gs.map(({g,m})=>{const u=m&&users.find(x=>x.id==m.uid);return`<button class="les" data-a="chat" data-v="${g.id}">${gAv(g,40)}<span style="flex:1;min-width:0"><b>${esc(gTitle(g))}</b>${g.dm?' <span class="pill">DM</span>':""}<br><span class="k">${m?esc((g.dm?"":(u?.name||"user")+": ")+m.text.slice(0,50)):"No messages yet"}</span></span><span class="k">${m?ago(m.at):""}</span></button>`}).join("")||'<p class="k">No chats yet. Make friends, then message them or start a group.</p>'}`}
 
-function people(){const q=pq.toLowerCase(),req=incoming(),list=users.filter(u=>u.id!=user.uid&&u.name&&!u.deactivated&&u.showSearch!==false&&(!q||(u.name+" "+(u.username||"")).toLowerCase().includes(q))).sort((a,b)=>isFriend(b.id)-isFriend(a.id)).slice(0,30);
+function people(){const q=pq.toLowerCase(),req=incoming(),list=users.filter(u=>u.id!=user.uid&&u.name&&!u.deactivated&&u.showSearch!==false&&!isBlocked(u.id)&&!blockedMe(u.id)&&(!q||(u.name+" "+(u.username||"")).toLowerCase().includes(q))).sort((a,b)=>isFriend(b.id)-isFriend(a.id)).slice(0,30);
  return`${req.length?`<div class="box"><h3>Friend requests</h3>${req.map(f=>{const u=users.find(x=>x.id==f.a);return`<div class="row" style="padding:6px 0">${avBtn(u,f.a,32)}<span style="flex:1">${nmBtn(u,f.a)}</span><button class="btn s p" data-a="accept" data-v="${f.a}">Accept</button><button class="btn s" data-a="decline" data-v="${f.a}">Decline</button></div>`}).join("")}</div>`:""}
  <div class="f" style="margin-top:12px"><label for="pq">Find people by name or username</label><input id="pq" value="${esc(pq)}" autocomplete="off"></div>
  ${list.map(u=>`<button class="les" data-a="user" data-v="${u.id}">${av(u,36)}<span style="flex:1"><b>${esc(u.name)}</b> <span class="k">${u.username?"@"+esc(u.username):""}</span></span><span class="k">${frState(u.id)}</span></button>`).join("")||'<p class="k">No one found.</p>'}`}
 
-function ranks(){const val=u=>lbMetric=="courses"?cc(u):(u.coins||0),list=users.filter(u=>u.name&&!u.deactivated&&(u.showLb!==false||u.id==user.uid)&&(lbScope=="all"||u.id==user.uid||isFriend(u.id))).sort((a,b)=>val(b)-val(a)).slice(0,25),tg=(a,cur,items)=>items.map(([v,n])=>`<button class="btn s ${v==cur?"on":""}" data-a="${a}" data-v="${v}">${n}</button>`).join("");
+function ranks(){const val=u=>lbMetric=="courses"?cc(u):(u.coins||0),list=users.filter(u=>u.name&&!u.deactivated&&(lbMetric!="coins"||u.id!=ADMIN_UID)&&(u.showLb!==false||u.id==user.uid)&&(lbScope=="all"||u.id==user.uid||isFriend(u.id))).sort((a,b)=>val(b)-val(a)).slice(0,25),tg=(a,cur,items)=>items.map(([v,n])=>`<button class="btn s ${v==cur?"on":""}" data-a="${a}" data-v="${v}">${n}</button>`).join("");
  return`<div class="row" style="margin:12px 0;gap:6px">${tg("lbs",lbScope,[["all","Everyone"],["friends","Friends only"]])}<span class="sp"></span>${tg("lbm",lbMetric,[["courses","Courses completed"],["coins","Coins"]])}</div>
  <div class="clist">${list.map((u,i)=>`<button class="rk ${u.id==user.uid?"me":""}" data-a="user" data-v="${u.id}"><span class="cn" style="width:22px">${i+1}</span>${av(u,30)}<span style="flex:1"><b>${esc(u.name)}</b> <span class="k">${u.username?"@"+esc(u.username):""}</span></span><b>${val(u)}</b><span class="k" style="width:58px">${lbMetric=="courses"?"courses":"coins"}</span></button>`).join("")||'<p class="k" style="padding:14px">Nobody here yet.</p>'}</div>`}
 
 const comm=()=>`<div class="row">${[["feed","Feed"],["chats","Chats"],["people","People"+(incoming().length?" ("+incoming().length+")":"")],["ranks","Ranks"]].map(([t,n])=>`<button class="btn ${t==tab?"on":""}" data-a="tab" data-v="${t}">${n}</button>`).join("")}</div>`+({feed,chats,people,ranks}[tab]||feed)();
 
-function chatView(){const g=groups.find(x=>x.id==gid);if(!g)return`<button class="btn" data-a="go" data-v="comm">Back</button>`;const ms=msgs.filter(m=>m.gid==gid).slice().reverse();
+function chatView(){const g=groups.find(x=>x.id==gid);if(!g)return`<button class="btn" data-a="go" data-v="comm">Back</button>`;const ms=msgs.filter(m=>m.gid==gid&&!isBlocked(m.uid)).slice().reverse();
  return`<div class="chathead"><button class="btn s" data-a="go" data-v="comm">Back</button>${gAv(g,34)}<div style="flex:1;min-width:0"><b>${esc(gTitle(g))}</b><div class="k">${g.dm?"Direct message":(g.members||[]).length+" members"}</div></div>${g.dm?"":`<button class="btn s" data-a="members">Members</button>`}</div>
  <div class="chat">${ms.map(m=>{const mine=m.uid==user.uid,u=users.find(x=>x.id==m.uid);return`<div class="bub ${mine?"me":""}">${mine||g.dm?"":`<button class="lnk k" data-a="user" data-v="${m.uid}">${esc(u?.name||"user")}</button>`}<div>${esc(m.text)}</div><span class="k">${ago(m.at)}${mine?"":` - <button class="lnk k" data-a="report" data-v="msg:${m.id}">Report</button>`}</span></div>`}).join("")||'<p class="k" style="text-align:center">Say hello.</p>'}</div>
  <div class="cbar"><form id="mgF" class="row"><input id="mt" maxlength="500" placeholder="Message" style="flex:1" autocomplete="off"><button class="btn p">Send</button></form><div class="k" style="margin-top:6px">Chats are filtered. Threats and severe insults are blocked. Report anything that feels wrong.</div></div>`}
 
-function reportsPage(){return`<h1>Reports</h1><p class="k">Posts and messages that people flagged.</p>${reports.slice().sort((a,b)=>b.at-a.at).map(r=>{const au=users.find(u=>u.id==r.au),by=users.find(u=>u.id==r.by);return`<div class="box"><div class="k">${r.kind} by ${esc(au?.name||"user")} / reported by ${esc(by?.name||"user")} / ${ago(r.at)}</div><p>${esc(r.text)}</p><div class="row"><button class="btn s d" data-a="delcontent" data-v="${r.id}">Remove content</button><button class="btn s" data-a="delrep" data-v="${r.id}">Dismiss</button></div></div>`}).join("")||'<p class="k">No reports.</p>'}`}
+function reportsPage(){return`<h1>Reports</h1><p class="k">Complaints sent straight to you. Newest first.</p>${reports.slice().sort((a,b)=>b.at-a.at).map(r=>{const au=users.find(u=>u.id==r.au),by=users.find(u=>u.id==r.by);return`<div class="box"><div class="row"><span class="pill">${esc(r.reason||"No reason")}</span><span class="k">${r.kind} / reported by ${esc(by?.name||"user")} / ${ago(r.at)}</span></div>
+ <p style="margin:8px 0 2px"><b>${esc(au?.name||"user")}</b>${r.text?": "+esc(r.text):""}</p>${r.details?`<p style="margin:2px 0;color:var(--muted)">Their note: ${esc(r.details)}</p>`:""}
+ <div class="row" style="margin-top:8px"><button class="btn s d" data-a="delcontent" data-v="${r.id}">${r.kind=="profile"?"Remove their pictures":"Remove content"}</button>${r.kind=="profile"?`<button class="btn s" data-a="user" data-v="${r.au}">View profile</button>`:""}<button class="btn s" data-a="delrep" data-v="${r.id}">Dismiss</button></div></div>`}).join("")||'<p class="k" style="margin-top:12px">No reports.</p>'}`}
 
 const membersModal=()=>{const g=groups.find(x=>x.id==gid),own=g.owner==user.uid||isAdmin(),can=friendsList().filter(u=>!(g.members||[]).includes(u.id));
  return`<div class="modal"><div class="sheet"><div class="row"><h2>Members</h2><button class="btn s sp" data-a="x">Close</button></div>
@@ -393,18 +430,19 @@ const newGroupModal=()=>`<div class="modal"><div class="sheet"><div class="row">
 const addToGroup=id=>{if(!isFriend(id))return`<p class="k">Become friends to add them to a group.</p>`;const gs=groups.filter(g=>(g.owner==user.uid||isAdmin())&&!(g.members||[]).includes(id));
  return gs.length?`<div class="box row"><span>Add to a group</span><select id="atg" style="flex:1;max-width:260px">${gs.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select><button class="btn p" data-a="addtog" data-v="${id}">Add</button></div>`:""};
 
-function profileOf(id){const self=id==user.uid,u=self?me():users.find(x=>x.id==id);if(!u)return'<p class="k">User not found.</p>';const P=u.prof||{},cr=credits.filter(c=>c.uid==id),pets=petsOf(u),b=u.buddy&&PETS[u.buddy]?u.buddy:null,vis=courses.filter(c=>!c.draft);
+function profileOf(id){const self=id==user.uid,u=self?me():users.find(x=>x.id==id);if(!u)return'<p class="k">User not found.</p>';if(!self&&blockedMe(id))return`<div class="row"><button class="btn" data-a="back">Back</button></div><p class="k" style="margin-top:12px">This profile isn't available.</p>`;const P=u.prof||{},cr=credits.filter(c=>c.uid==id),pets=petsOf(u),b=u.buddy&&PETS[u.buddy]?u.buddy:null,vis=courses.filter(c=>!c.draft);
  const done=vis.filter(c=>{const p=prog(c,u);return p.n&&p.d==p.n}),wip=vis.filter(c=>{const p=prog(c,u);return p.d>0&&p.d<p.n}),tags=(P.tags||"").split(",").map(x=>x.trim()).filter(Boolean).slice(0,6);
- return`${self?"":`<div class="row" style="margin-bottom:8px"><button class="btn" data-a="go" data-v="comm">Back</button></div>`}
- <div class="pcard"><div class="pbanner" style="--bn:${esc(P.banner||"#6c9bd8")}" data-p="${esc(P.pattern||"plain")}"></div><div class="pbody"><div class="row" style="align-items:flex-end">${av(u,84)}<span class="sp"></span>
- ${self?`<button class="btn" data-a="go" data-v="editprofile">Edit profile</button>`:`${isFriend(id)?`<button class="btn p" data-a="dm" data-v="${id}">Message</button>`:""}<button class="btn ${isFriend(id)?"on":"p"}" data-a="friend" data-v="${id}">${frState(id)}</button>`}</div>
+ return`${prevNav||!self?`<div class="row" style="margin-bottom:8px"><button class="btn" data-a="back">Back</button></div>`:""}
+ <div class="pcard"><div class="pbanner" style="--bn:${esc(P.banner||"#6c9bd8")};${u.banner&&/^data:image\/jpeg;base64,/.test(u.banner)?`background-image:url('${esc(u.banner)}');background-size:cover;background-position:center`:""}" data-p="${u.banner?"plain":esc(P.pattern||"plain")}"></div><div class="pbody"><div class="row" style="align-items:flex-end">${av(u,84)}<span class="sp"></span>
+ ${self?`<button class="btn" data-a="go" data-v="editprofile">Edit profile</button>`:`${isFriend(id)&&!isBlocked(id)?`<button class="btn p" data-a="dm" data-v="${id}">Message</button>`:""}<button class="btn ${isFriend(id)?"on":"p"}" data-a="friend" data-v="${id}">${frState(id)}</button>`}</div>
  <div class="row" style="align-items:flex-start;margin-top:8px"><div style="flex:1;min-width:180px"><h1>${esc(u.name)}</h1><div class="k">${u.username?"@"+esc(u.username)+" / ":""}${esc(u.pronouns||"no pronouns set")}</div>
  ${P.status?`<div style="margin-top:6px;color:var(--brand);font-weight:600">${esc(P.status)}</div>`:""}${tags.length?`<div class="row" style="gap:6px;margin-top:8px">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
  <p style="max-width:56ch;margin:10px 0 0;white-space:pre-wrap">${esc(u.bio||"No bio yet.")}</p></div>
  ${b?`<div class="buddy t${TIER[PETS[b].r]}" style="flex-direction:column;text-align:center;max-width:200px;margin:0">${petSvg(b,76)}<b>${esc(pname(u,b))}</b><span class="rr r${TIER[PETS[b].r]}">${PETS[b].r}</span><span class="k">${esc(lineFor(b,u,new Date().getDate()))}</span></div>`:""}</div></div></div>
+ ${self?"":`<div class="row" style="gap:6px;margin-top:8px"><button class="btn s" data-a="${isBlocked(id)?"unblock":"block"}" data-v="${id}">${isBlocked(id)?"Unblock":"Block"}</button><button class="btn s" data-a="report" data-v="profile:${id}">Report</button>${isAdmin()?`<form id="gcF" data-u="${id}" class="row" style="gap:6px;margin-left:auto"><input id="gc" type="number" min="1" placeholder="Coins to give" style="width:130px" aria-label="Coins to give"><button class="btn s p">Give coins</button></form>`:""}</div>`}
  ${P.ss!==false?`<div class="tiles">${[[(u.done||[]).length,"lessons completed"],[cc(u),"courses completed"],[(u.passed||[]).length,"quizzes passed"],[streak(u)+"d","day streak"],[pets.length,"pets collected"]].map(([a,c])=>`<div class="tile"><b>${a}</b><span>${c}</span></div>`).join("")}</div>`:""}
- ${P.sw!==false&&wip.length?`<div class="box"><h3>Working on right now</h3>${wip.map(c=>{const p=prog(c,u);return`<div class="row" style="padding:5px 0"><span style="flex:1"><b>${esc(c.title)}</b> <span class="k">${esc(c.category||"")}</span></span><span class="bar" style="width:120px"><i style="width:${p.d/p.n*100}%"></i></span><span class="k">${p.d} of ${p.n}</span></div>`}).join("")}</div>`:""}
- ${P.sd!==false&&done.length?`<div class="box"><h3>Completed courses</h3><div class="row" style="gap:6px;margin-top:6px">${done.map(c=>`<span class="tag">${esc(c.title)}</span>`).join("")}</div></div>`:""}
+ ${P.sw!==false&&wip.length?`<div class="box"><h3>Working on right now</h3>${wip.map(c=>{const p=prog(c,u);return`<div class="row" style="padding:5px 0"><span style="flex:1"><button class="lnk" data-a="open" data-v="${c.id}">${esc(c.title)}</button> <span class="k">${esc(c.category||"")}</span></span><span class="bar" style="width:120px"><i style="width:${p.d/p.n*100}%"></i></span><span class="k">${p.d} of ${p.n}</span></div>`}).join("")}</div>`:""}
+ ${P.sd!==false&&done.length?`<div class="box"><h3>Completed courses</h3><div class="row" style="gap:6px;margin-top:6px">${done.map(c=>`<button class="tag" data-a="open" data-v="${c.id}">${esc(c.title)}</button>`).join("")}</div>${self?"":`<p class="k" style="margin-top:8px">Tap a course to try it yourself.</p>`}</div>`:""}
  ${P.sp2!==false&&pets.length?`<div class="box"><h3>Pets</h3><div class="row" style="gap:12px;margin-top:6px">${pets.map(n=>`<div class="item fxl${TIER[PETS[n].r]}" style="align-items:center;text-align:center;padding:8px 12px">${petSvg(n,58)}<b>${esc(pname(u,n))}</b><span class="rr r${TIER[PETS[n].r]}">${PETS[n].r}</span></div>`).join("")}</div></div>`:""}
  ${cr.length||(isAdmin()&&showCr)?`<div class="box"><h3>Contributions</h3>${cr.length?`<ul>${cr.map(c=>`<li>${esc(c.text)}${isAdmin()?` <button class="btn s d" data-a="delcr" data-v="${c.id}">Remove</button>`:""}</li>`).join("")}</ul>`:""}
  ${isAdmin()&&showCr?`<form id="crF" data-u="${id}" class="row" style="margin-top:6px"><input id="cr" placeholder="e.g. Helped write the chess course" style="flex:1" maxlength="120" aria-label="Contribution"><button class="btn p">Add credit</button><button type="button" class="btn" data-a="togglecr">Cancel</button></form>`:""}</div>`:""}
@@ -412,7 +450,7 @@ function profileOf(id){const self=id==user.uid,u=self?me():users.find(x=>x.id==i
  ${self?"":addToGroup(id)}`}
 
 function shop(){const m=me(),own=petsOf(m),card=it=>`<div class="item"><div class="pic" style="display:grid;place-items:center">${it.kind=="egg"?eggSvg(it.r,84):it.kind=="hint"?hintSvg:freezeSvg}</div><b>${it.name}</b><p>${it.desc}</p>${it.odds?`<span class="k">${it.odds.map(o=>o[1]+"% "+o[0]).join(" / ")}</span>`:""}
-  <div class="row"><span class="price">${coin(15)} ${it.price}</span><button class="btn p sp" data-a="buy" data-v="${it.id}" ${(m.coins||0)<it.price?"disabled":""}>Buy</button></div></div>`;
+  <div class="row"><span class="price">${coin(15)} ${it.price}</span><button class="btn p sp" data-a="buy" data-v="${it.id}" ${!isAdmin()&&(m.coins||0)<it.price?"disabled":""}>Buy</button></div></div>`;
  return`${fromCourse&&cid?`<p><button class="btn" data-a="backcourse">Back to your course</button></p>`:""}<div class="row"><div><h1>Shop</h1><span class="k">Earn coins from lessons and quizzes, then spend them here.</span></div><span class="chip sp">${m.hints||0} hints / ${m.freezes||0} freezes</span></div>
  <h3 style="margin:16px 0 8px">Supplies</h3><div class="grid">${SHOP.filter(i=>i.kind!="egg").map(card).join("")}</div>
  <h3 style="margin:16px 0 8px">Eggs</h3><div class="grid">${SHOP.filter(i=>i.kind=="egg").map(card).join("")}</div>
@@ -438,6 +476,7 @@ function editProfile(){const m=me(),P=m.prof||{};return`<div class="row"><button
  <div class="f"><label for="pr">Pronouns</label><input id="pr" value="${esc(m.pronouns||"")}" maxlength="20" placeholder="she/her, he/him, they/them"></div>
  <div class="f"><label for="pb">Bio</label><textarea id="pb" maxlength="300">${esc(m.bio||"")}</textarea></div>
  <h3 style="margin:14px 0 8px">Profile style</h3>
+ <div class="f"><label for="bf">Banner picture (optional)</label><input id="bf" type="file" accept="image/*"><div class="row" style="gap:6px;margin-top:4px"><button type="button" class="btn s" data-a="rmbanner">Remove banner picture</button><button type="button" class="btn s" data-a="rmpfp">Remove profile photo</button></div><span class="k">Pictures are checked automatically before they are saved.</span></div>
  <div class="f"><label for="ps">Status line</label><input id="ps" maxlength="50" value="${esc(P.status||"")}" placeholder="Currently learning Python"></div>
  <div class="f"><label for="pg">Tags (separate with commas)</label><input id="pg" maxlength="70" value="${esc(P.tags||"")}" placeholder="chess, coding, history"></div>
  <div class="two" style="gap:10px"><div class="f"><label for="pc">Banner color</label><input id="pc" type="color" value="${esc(P.banner||"#6c9bd8")}"></div><div class="f"><label for="pp">Banner pattern</label><select id="pp">${["plain","dots","grid","stripes"].map(x=>`<option ${x==(P.pattern||"plain")?"selected":""}>${x}</option>`).join("")}</select></div></div>
@@ -453,6 +492,7 @@ function settings(){const m=me(),N=m.np||{},sec=(h,b)=>`<div class="box"><h3 sty
  ${sec("Appearance",`<p class="k" style="margin:0 0 8px">Auto is dark from 9pm to 6am and light the rest of the day.</p><div class="row" style="gap:6px;margin-bottom:10px">${[["auto","Auto"],["Mono","Dark"],["Paper","Light"]].map(([v,n])=>`<button class="btn s ${themePick==v?"on":""}" data-a="preset" data-v="${v}">${n}</button>`).join("")}</div>
   <div class="row" style="gap:6px">${COLORS.map(n=>`<button class="btn s ${themePick==n?"on":""}" data-a="preset" data-v="${n}"><span class="sw" style="background:${THEMES[n][0]}"></span>${n}</button>`).join("")}</div>`)}
  ${sec("Privacy",`${tg("showLb","Show me on leaderboards",m.showLb!==false)}${tg("showSearch","Let people find me in search",m.showSearch!==false)}`)}
+ ${sec("Blocked people",(m.blocked||[]).map(id=>{const u=users.find(x=>x.id==id);return`<div class="row" style="padding:4px 0">${av(u,28)}<span style="flex:1">${esc(u?.name||"user")}</span><button class="btn s" data-a="unblock" data-v="${id}">Unblock</button></div>`}).join("")||'<span class="k">You have not blocked anyone.</span>')}
  ${sec("Session",`<button class="btn d" data-a="out">Log out</button>`)}</div></div>`}
 
 const accountModal=()=>`<div class="modal"><div class="sheet" style="max-width:440px"><div class="row"><h2>${{email:"Change email",deact:"Deactivate account",del:"Delete account"}[acct]}</h2><button class="btn s sp" data-a="x" aria-label="Close">x</button></div>
@@ -472,11 +512,14 @@ function editor(){const e=edit;return`<div class="modal"><div class="sheet"><div
  ${e.lessons.map((l,i)=>`<div class="box"><div class="row"><b>Lesson ${i+1}</b><span class="sp"></span><button type="button" class="btn s" data-a="mv" data-v="${i}:-1">Up</button><button type="button" class="btn s" data-a="mv" data-v="${i}:1">Down</button><button type="button" class="btn s d" data-a="rm" data-v="${i}">Remove</button></div>
  <div class="f"><label for="lt${i}">Title</label><input id="lt${i}" value="${esc(l.t)}"></div><div class="f"><label for="lb${i}">Text (new line = paragraph. Start a line with "## " for a heading, "- " for a bullet, "> " for a code line)</label><textarea id="lb${i}">${esc(l.b)}</textarea></div>
  <div class="f"><label for="ll${i}">Link (optional)</label><input id="ll${i}" value="${esc(l.l)}"></div>
- <div class="two" style="gap:10px"><div class="f"><label for="ly${i}">Lesson type</label><select id="ly${i}">${["text","code","chess"].map(t=>`<option ${t==l.type?"selected":""}>${t}</option>`).join("")}</select></div>
+ <div class="two" style="gap:10px"><div class="f"><label for="ly${i}">Lesson type</label><select id="ly${i}">${["text","code","chess","custom"].map(t=>`<option ${t==l.type?"selected":""}>${t}</option>`).join("")}</select></div>
  <div class="f"><label for="lp${i}">Chess piece (chess type)</label><select id="lp${i}">${Object.keys(GL).map(t=>`<option ${t==l.piece?"selected":""}>${t}</option>`).join("")}</select></div></div>
  <div class="f"><label for="lr${i}">Rounds (chess type)</label><input id="lr${i}" type="number" min="1" max="10" value="${esc(l.rounds)}"></div>
  <div class="f"><label for="lc${i}">Starter code (code type)</label><textarea id="lc${i}" class="code">${esc(l.code)}</textarea></div>
- <div class="f"><label for="lx${i}">Expected output (code type, optional: turns it into a challenge)</label><input id="lx${i}" value="${esc(l.expect)}"></div><div class="f"><label for="lh${i}">Hint (optional, shown when a student uses a hint)</label><input id="lh${i}" value="${esc(l.hint||"")}"></div></div>`).join("")}
+ <div class="f"><label for="lx${i}">Expected output (code type, optional: turns it into a challenge)</label><input id="lx${i}" value="${esc(l.expect)}"></div><div class="f"><label for="lh${i}">Hint (optional, shown when a student uses a hint)</label><input id="lh${i}" value="${esc(l.hint||"")}"></div>
+ <div class="f"><label for="lm${i}">Custom element code (lesson type: custom). HTML, CSS and JS in one snippet</label><textarea id="lm${i}" class="code" style="min-height:120px">${esc(l.html||"")}</textarea></div>
+ <div class="f"><label for="lai${i}">Describe the interactive element you want</label><input id="lai${i}" placeholder="e.g. A drag and drop game matching Python terms to their meanings"></div>
+ <div class="row" style="gap:6px"><button type="button" class="btn s" data-a="aiprompt" data-v="${i}">Copy prompt for Claude</button><button type="button" class="btn s" data-a="prevcode" data-v="${i}">Preview</button><span class="k">Paste the prompt into Claude, then paste the code it gives you into the box above.</span></div></div>`).join("")}
  <p><button type="button" class="btn" data-a="addl">Add lesson</button></p>
  <h3 style="margin:18px 0 4px">Final quiz</h3><div class="f"><label for="ep">Pass mark (percent correct)</label><input id="ep" type="number" min="1" max="100" value="${esc(e.pass)}"></div>
  ${e.quiz.map((x,i)=>`<div class="box"><div class="row"><b>Question ${i+1}</b><span class="sp"></span><button type="button" class="btn s d" data-a="rmq" data-v="${i}">Remove</button></div>
@@ -492,10 +535,10 @@ const siteModal=()=>`<div class="modal"><div class="sheet"><div class="row"><h2>
  <div class="f"><label for="sb">Announcement banner (empty = hidden)</label><input id="sb" value="${esc(site.banner||"")}"></div>
  <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><div class="f"><label for="sa">About page text</label><textarea id="sa">${esc(site.about||"")}</textarea></div><div class="row"><button class="btn p">Save</button><button type="button" class="btn sp" data-a="seed">Add / refresh all starter courses</button></div></form></div></div>`;
 
-function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=="checkbox"?el.checked:el.value);
+function render(){if(view=="course"&&Date.now()-lastAct>1500&&document.querySelector("iframe.custom"))return;const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=="checkbox"?el.checked:el.value);
  const fid=document.activeElement?.id,pos=document.activeElement?.selectionStart;
  const body=user?({home,course,comm,me:()=>profileOf(user.uid),user:()=>profileOf(puid),set:settings,shop,fame,about,reports:reportsPage,editprofile:editProfile,chat:chatView}[view]||home)():"";
- $("#app").innerHTML=!user?authView():(view=="chat"?"":nav())+body+(modal=="edit"?editor():modal=="site"?siteModal():modal=="members"?membersModal():modal=="newgroup"?newGroupModal():modal=="acct"?accountModal():modal=="nohint"?noHintModal():"")+(hatch?hatchModal():"");
+ $("#app").innerHTML=!user?authView():(view=="chat"?"":nav())+body+(modal=="edit"?editor():modal=="site"?siteModal():modal=="members"?membersModal():modal=="newgroup"?newGroupModal():modal=="acct"?accountModal():modal=="nohint"?noHintModal():modal=="report"?reportModal():"")+(showPrev?previewModal():"")+(hatch?hatchModal():"");
  for(const id in keep){const el=document.getElementById(id);if(!el||["color","range","file"].includes(el.type))continue;if(el.type=="checkbox")el.checked=keep[id];else el.value=keep[id]}
  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch{}}}
  const cs=$(".chat");if(cs)cs.scrollTop=cs.scrollHeight}
@@ -503,7 +546,7 @@ function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=
 /* ---------- actions ---------- */
 function readEdit(){const g=i=>document.getElementById(i);if(!g("et"))return;
  Object.assign(edit,{title:g("et").value,category:g("ec").value,blurb:g("eb").value,level:g("el").value,mins:g("em").value,order:g("er").value,featured:g("ef").checked,draft:g("ed").checked});
- edit.lessons=edit.lessons.map((l,i)=>({t:g("lt"+i).value,b:g("lb"+i).value,l:g("ll"+i).value,type:g("ly"+i).value,piece:g("lp"+i).value,rounds:+g("lr"+i).value||4,code:g("lc"+i).value,expect:g("lx"+i).value,hint:g("lh"+i).value}));
+ edit.lessons=edit.lessons.map((l,i)=>({t:g("lt"+i).value,b:g("lb"+i).value,l:g("ll"+i).value,type:g("ly"+i).value,piece:g("lp"+i).value,rounds:+g("lr"+i).value||4,code:g("lc"+i).value,expect:g("lx"+i).value,hint:g("lh"+i).value,html:g("lm"+i).value}));
  edit.pass=+g("ep").value||70;edit.quiz=edit.quiz.map((x,i)=>({q:g("qq"+i).value,o:[0,1,2,3].map(j=>g("qo"+i+"_"+j).value),a:+g("qa"+i).value}))}
 const blank=()=>({title:"",category:"",blurb:"",level:"Beginner",mins:5,order:courses.length+1,featured:false,draft:false,lessons:[bl()],quiz:[],pass:70});
 const mkT=(t,b)=>({t,b,type:"text",l:"",piece:"rook",rounds:4,code:"",expect:""}),mkQ=(q,o,a)=>({q,o,a});
@@ -533,23 +576,23 @@ const MORE=[
  mkT("Decisions and loops","Programs often need to choose and to repeat.\n## if and else\n> if (age >= 18) {\n>   console.log(\"adult\")\n> } else {\n>   console.log(\"minor\")\n> }\n## Comparing\n- === means equal to\n- !== means not equal to\n- > and < compare size\n## Loops\nA for loop repeats code a set number of times:\n> for (let i = 0; i < 3; i++) {\n>   console.log(i)\n> }\nThis prints 0, 1 and 2. Prefer === over == to avoid surprises.")],
  quiz:[mkQ("Which keyword makes a variable you can change later?",["const","let","def","static"],1),mkQ("What does console.log do?",["Deletes a variable","Shows a value in the console","Creates a function","Saves a file"],1),mkQ("Which of these is a boolean?",["\"true\"","true","1","yes"],1),mkQ("What does a for loop with i from 0 while i < 3 print?",["1 2 3","0 1 2","0 1 2 3","Nothing"],1),mkQ("Which operator checks that two values are equal?",["=","===","=>","!=="],1)]}];
 const A={
- go:v=>{view=v;modal=null;menu=false;notifOpen=false;fromCourse=false;render()},menu:()=>{menu=!menu;notifOpen=false;render()},closehatch:()=>{const n=document.getElementById("hn")?.value.trim();if(n&&hatch&&!hatch.dup)saveMe({petNames:{[hatch.pet]:n.slice(0,16)}});hatch=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
+ go:v=>{view=v;modal=null;menu=false;notifOpen=false;fromCourse=false;prevNav=null;render()},back:()=>{if(prevNav){view=prevNav.view;tab=prevNav.tab;gid=prevNav.gid;prevNav=null}else view="comm";render();scrollTo(0,0)},menu:()=>{menu=!menu;notifOpen=false;render()},closehatch:()=>{const n=document.getElementById("hn")?.value.trim();if(n&&hatch&&!hatch.dup)saveMe({petNames:{[hatch.pet]:n.slice(0,16)}});hatch=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
  topic:v=>{picked=picked.includes(v)?picked.filter(x=>x!=v):[...picked,v];render()},
  open:v=>{const c=courses.find(x=>x.id==v);cid=v;view="course";qz={k:"",ans:{},sub:false};{const dd=me().done||[],L=c.lessons||[],k=L.findIndex((_,i)=>!dd.includes(key(v,i)));li=k<0?(hasQ(c)&&!(me().passed||[]).includes(v)?L.length:0):k}saveMe({w:{[c.category||"General"]:increment(1)}});render();scrollTo(0,0)},
  les:v=>{const c=courses.find(x=>x.id==cid);v=+v;if(v<0)return;if(locked(c,v))return toast("Finish the earlier steps first");li=v;qz={k:"",ans:{},sub:false};render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";menu=false;render()},
  new:()=>{edit=blank();modal="edit";menu=false;render()},
  edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({...bl(),...l})),quiz:(c.quiz||[]).map(x=>({q:x.q,o:[...x.o],a:x.a})),pass:c.pass||70};modal="edit";render()},
- user:v=>{showCr=false;puid=v;view=v==user.uid?"me":"user";modal=null;render();scrollTo(0,0)},
- friend:v=>{const id=user.uid+"_"+v;if(fr(user.uid,v))return deleteDoc(doc(db,"friends",id));const acc=fr(v,user.uid);setDoc(doc(db,"friends",id),{a:user.uid,b:v});notify(v,acc?"friend_ok":"friend",(me().name||"Someone")+(acc?" accepted your friend request":" sent you a friend request"),{id:"fr_"+user.uid+"_"+v})},
+ user:v=>{showCr=false;if(view!="user"&&view!="me")prevNav={view,tab,gid};puid=v;view=v==user.uid?"me":"user";modal=null;render();scrollTo(0,0)},
+ friend:v=>{const id=user.uid+"_"+v;if(fr(user.uid,v))return deleteDoc(doc(db,"friends",id));if(blockedMe(v)||isBlocked(v))return toast("You can't send a request to this person.");const acc=fr(v,user.uid);setDoc(doc(db,"friends",id),{a:user.uid,b:v});notify(v,acc?"friend_ok":"friend",(me().name||"Someone")+(acc?" accepted your friend request":" sent you a friend request"),{id:"fr_"+user.uid+"_"+v})},
  chat:v=>{gid=v;view="chat";setDoc(doc(db,"notifs","msg_"+v+"_"+user.uid),{read:true},{merge:true}).catch(()=>{});render()},newgroup:()=>{modal="newgroup";render()},members:()=>{modal="members";render()},
  addmember:async()=>{const mid=document.getElementById("addm").value;await setDoc(doc(db,"groups",gid),{members:arrayUnion(mid)},{merge:true});notify(mid,"group",(me().name||"Someone")+" added you to a group",{gid});toast("Added")},
  addtog:async v=>{const gi=document.getElementById("atg").value;await setDoc(doc(db,"groups",gi),{members:arrayUnion(v)},{merge:true});notify(v,"group",(me().name||"Someone")+" added you to a group",{gid:gi});toast("Added to group")},
- buy:v=>{const it=SHOP.find(x=>x.id==v),m=me();if((m.coins||0)<it.price)return toast("Not enough coins");
-  if(it.kind=="hint"){saveMe({coins:increment(-it.price),hints:increment(1)});toast("Hint added")}
-  else if(it.kind=="freeze"){saveMe({coins:increment(-it.price),freezes:increment(1)});toast("Streak freeze added")}
+ buy:v=>{const it=SHOP.find(x=>x.id==v),m=me();if(!isAdmin()&&(m.coins||0)<it.price)return toast("Not enough coins");
+  if(it.kind=="hint"){saveMe({coins:increment(isAdmin()?0:-it.price),hints:increment(1)});toast("Hint added")}
+  else if(it.kind=="freeze"){saveMe({coins:increment(isAdmin()?0:-it.price),freezes:increment(1)});toast("Streak freeze added")}
   else{let x=Math.random()*100,tier=it.odds[0][0];for(const[o,w]of it.odds){if(x<w){tier=o;break}x-=w}
    const pool=Object.keys(PETS).filter(n=>PETS[n].r==tier),pet=pool[Math.floor(Math.random()*pool.length)],dup=petsOf(m).includes(pet),back=Math.round(it.price*.4);
-   saveMe({coins:increment(-it.price+(dup?back:0)),...(dup?{}:{pets:arrayUnion(pet),...(petsOf(m).length?{}:{buddy:pet})})});hatch={pet,dup,back,egg:it.r};render()}},
+   saveMe({coins:increment(isAdmin()?0:-it.price+(dup?back:0)),...(dup?{}:{pets:arrayUnion(pet),...(petsOf(m).length?{}:{buddy:pet})})});hatch={pet,dup,back,egg:it.r};render()}},
  buddy:v=>saveMe({buddy:v}),rename:v=>{const n=prompt("Name your pet",pname(me(),v));if(n&&n.trim())saveMe({petNames:{[v]:n.trim().slice(0,16)}})},
  togglecr:()=>{showCr=!showCr;render()},acct:v=>{acct=v;modal="acct";render()},resetpw:async()=>{await sendPasswordResetEmail(auth,user.email);toast("Reset link sent to "+user.email)},dodeact:async()=>{await saveMe({deactivated:true});modal=null;await signOut(auth)},
  accept:v=>{setDoc(doc(db,"friends",user.uid+"_"+v),{a:user.uid,b:v});notify(v,"friend_ok",(me().name||"Someone")+" accepted your friend request",{id:"fr_"+user.uid+"_"+v})},
@@ -558,20 +601,22 @@ const A={
  nclick:v=>{const it=allNotifs().find(x=>x.id==v);if(!it)return;notifOpen=false;
   if(it.drop){saveMe({dropRead:arrayUnion(v.slice(5))});const c=courses.find(x=>x.id==it.cid);if(c)A.open(c.id);else render();return}
   if(it.unread)setDoc(doc(db,"notifs",v),{read:true},{merge:true}).catch(()=>{});
-  if(it.type=="msg"||it.type=="group"){gid=it.gid;tab="chats";view="chat"}else if(it.type=="friend"||it.type=="friend_ok"){puid=it.from;view=it.from==user.uid?"me":"user"}else{tab="feed";view="comm"}render()},
- usehint:()=>{const m=me();if((m.hints||0)<1){modal="nohint";render();return}
-  const c=courses.find(x=>x.id==cid),ls=c.lessons||[],isQ=hasQ(c)&&li>=ls.length;let used=false;
-  if(isQ){const Q=c.quiz,i=Q.findIndex((x,j)=>qz.ans[j]===undefined&&!(qz.h&&qz.h[j]));if(qz.sub||i<0)return toast("No question left to use a hint on");
-   const wrong=Q[i].o.map((_,j)=>j).filter(j=>j!=Q[i].a).sort(()=>Math.random()-.5).slice(0,2);qz.h=qz.h||{};qz.h[i]=wrong;used=true;toast("Two wrong answers removed on question "+(i+1))}
-  else{const l=ls[li]||{};if(l.type=="chess"&&ch&&ch.r<ch.n){const o=[];for(let q=0;q<64;q++)if(legal(ch.p,ch.s,q))o.push(q);ch.hintSq=o[Math.floor(Math.random()*o.length)];used=true;toast("A legal square is marked")}
-   else if(l.type=="code"&&l.expect){hintTxt={k:cid+":"+li,t:l.hint||"Read the task again, run your code, and compare the output with what the lesson asks for."};used=true}
-   else return toast("Hints help on quizzes and challenges")}
-  if(used)saveMe({hints:increment(-1)});render()},decline:v=>deleteDoc(doc(db,"friends",v+"_"+user.uid)),
+  if(it.type=="msg"||it.type=="group"){gid=it.gid;tab="chats";view="chat"}else if(it.type=="friend"||it.type=="friend_ok"){puid=it.from;view=it.from==user.uid?"me":"user"}else if(it.type=="report"){view="reports"}else if(it.type=="gift"){view="me"}else{tab="feed";view="comm"}render()},
+ usehint:()=>{const m=me();if(!hintable())return toast("Hints are only for challenges, not quizzes");if((m.hints||0)<1&&!isAdmin()){modal="nohint";render();return}
+  const c=courses.find(x=>x.id==cid),l=(c.lessons||[])[li]||{};let used=false;
+  if(l.type=="chess"){if(!ch||ch.r>=ch.n)return toast("This challenge is already complete");const o=[];for(let q=0;q<64;q++)if(legal(ch.p,ch.s,q))o.push(q);ch.hintSq=o[Math.floor(Math.random()*o.length)];ch.msg="Hint: "+TIP[ch.p];used=true}
+  else if(l.type=="code"){const ta=document.getElementById("cd"+cid+"_"+li),n=(hintTxt.k==cid+":"+li?hintTxt.n:0)+1;hintTxt={k:cid+":"+li,n,t:codeHint(l,ta?ta.value:"",run.k==cid+":"+li?run.out:"",n)};used=true}
+  else if(l.type=="custom"){document.querySelector("iframe.custom")?.contentWindow?.postMessage({type:"hint",text:l.hint||""},"*");used=true;toast("Hint sent to the activity")}
+  if(used&&!isAdmin())saveMe({hints:increment(-1)});render()},decline:v=>deleteDoc(doc(db,"friends",v+"_"+user.uid)),
  lbs:v=>{lbScope=v;render()},lbm:v=>{lbMetric=v;render()},
  dm:async v=>{const id="dm_"+[user.uid,v].sort().join("_");if(!groups.some(g=>g.id==id))await setDoc(doc(db,"groups",id),{name:"",dm:true,owner:user.uid,members:[user.uid,v],at:Date.now()});gid=id;view="chat";tab="chats";render()},
- report:v=>{const[k,id]=v.split(":"),it=k=="post"?posts.find(x=>x.id==id):msgs.find(x=>x.id==id);if(!it)return;addDoc(collection(db,"reports"),{kind:k,tid:id,au:it.uid,text:it.text.slice(0,300),by:user.uid,at:Date.now()});toast("Reported. Thank you.")},
+ report:v=>{repT=v;modal="report";render()},
+ block:v=>{if(!confirm("Block this person? They will not be able to message you or send friend requests, and you will not see their posts."))return;saveMe({blocked:arrayUnion(v)});deleteDoc(doc(db,"friends",user.uid+"_"+v)).catch(()=>{});deleteDoc(doc(db,"friends",v+"_"+user.uid)).catch(()=>{});toast("Blocked")},
+ unblock:v=>{saveMe({blocked:arrayRemove(v)});toast("Unblocked")},rmbanner:()=>{saveMe({banner:""});toast("Banner picture removed")},rmpfp:()=>{saveMe({pfp:""});toast("Profile photo removed")},
+ aiprompt:v=>{const d=document.getElementById("lai"+v)?.value.trim();if(!d)return toast("Describe the element first");navigator.clipboard.writeText(PROMPT(d)).then(()=>toast("Prompt copied. Paste it into Claude."),()=>toast("Could not copy automatically."))},
+ prevcode:v=>{prevHtml=document.getElementById("lm"+v)?.value||"";if(!prevHtml.trim())return toast("Paste some code first");showPrev=true;render()},closeprev:()=>{showPrev=false;render()},
  delrep:v=>deleteDoc(doc(db,"reports",v)),
- delcontent:async v=>{const r=reports.find(x=>x.id==v);await deleteDoc(doc(db,r.kind=="post"?"posts":"msgs",r.tid));await deleteDoc(doc(db,"reports",v));toast("Removed")},cal:v=>{calM=Math.min(0,calM+ +v);render()},delcr:v=>deleteDoc(doc(db,"credits",v)),
+ delcontent:async v=>{const r=reports.find(x=>x.id==v);if(r.kind=="profile")await setDoc(doc(db,"users",r.tid),{pfp:"",banner:""},{merge:true});else await deleteDoc(doc(db,r.kind=="post"?"posts":"msgs",r.tid));await deleteDoc(doc(db,"reports",v));toast("Removed")},cal:v=>{calM=Math.min(0,calM+ +v);render()},delcr:v=>deleteDoc(doc(db,"credits",v)),
  hint:v=>{v=+v;const x=courses.find(c=>c.id==cid).quiz[v];if((me().hints||0)<1)return;const wrong=x.o.map((_,j)=>j).filter(j=>j!=x.a).sort(()=>Math.random()-.5).slice(0,2);
   qz.h=qz.h||{};qz.h[v]=wrong;if(wrong.includes(qz.ans[v]))delete qz.ans[v];saveMe({hints:increment(-1)});toast("Two wrong answers removed");render()},
  addq:()=>{readEdit();edit.quiz.push({q:"",o:["","","",""],a:0});render()},rmq:v=>{readEdit();edit.quiz.splice(+v,1);render()},
@@ -628,12 +673,14 @@ const A={
   S.push(...MORE);
   for(const o of courses.filter(x=>S.some(y=>y.title==x.title)))await deleteDoc(doc(db,"courses",o.id));
   for(const x of S)await addDoc(collection(db,"courses"),x);toast("Added")}};
-document.addEventListener("keydown",e=>{if(e.key=="Tab"&&!e.shiftKey&&e.target.classList?.contains("code")){e.preventDefault();const t=e.target;t.setRangeText("    ",t.selectionStart,t.selectionEnd,"end")}});
-document.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b&&A[b.dataset.a]){e.preventDefault();A[b.dataset.a](b.dataset.v)}});
-document.addEventListener("input",e=>{if(e.target.id=="pq"){pq=e.target.value;render();return}if(e.target.dataset.t=="radius"){radius=+e.target.value;applyTheme()}});
-document.addEventListener("change",e=>{const pk=e.target.dataset?.pref;if(pk){saveMe(pk.startsWith("np.")?{np:{[pk.slice(3)]:e.target.checked}}:{[pk]:e.target.checked});return}const fm=e.target.id;if(fm=="fl"||fm=="fv"||fm=="fs"){if(fm=="fl")fLen=e.target.value;else if(fm=="fv")fLvl=e.target.value;else fSt=e.target.value;render();return}const f=e.target.files?.[0];if(e.target.id!="pf"||!f)return;const im=new Image();
- im.onload=()=>{const c=document.createElement("canvas");c.width=c.height=128;const s=Math.min(im.width,im.height);c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);saveMe({pfp:c.toDataURL("image/jpeg",.8)});toast("Photo updated")};im.src=URL.createObjectURL(f)});
-document.addEventListener("submit",async e=>{e.preventDefault();const id=e.target.id,g=i=>document.getElementById(i),v=i=>g(i).value.trim();
+document.addEventListener("keydown",e=>{lastAct=Date.now();if(e.key=="Tab"&&!e.shiftKey&&e.target.classList?.contains("code")){e.preventDefault();const t=e.target;t.setRangeText("    ",t.selectionStart,t.selectionEnd,"end")}});
+window.addEventListener("message",e=>{const f=document.querySelector("iframe.custom");if(!f||e.source!==f.contentWindow||!e.data)return;lastAct=Date.now();if(e.data.type=="complete")complete();else if(e.data.type=="height"&&+e.data.h)f.style.height=Math.min(900,Math.max(200,+e.data.h+4))+"px"});
+document.addEventListener("click",e=>{lastAct=Date.now();const b=e.target.closest("[data-a]");if(b&&A[b.dataset.a]){e.preventDefault();A[b.dataset.a](b.dataset.v)}});
+document.addEventListener("input",e=>{lastAct=Date.now();if(e.target.id=="pq"){pq=e.target.value;render();return}if(e.target.dataset.t=="radius"){radius=+e.target.value;applyTheme()}});
+document.addEventListener("change",e=>{lastAct=Date.now();const pk=e.target.dataset?.pref;if(pk){saveMe(pk.startsWith("np.")?{np:{[pk.slice(3)]:e.target.checked}}:{[pk]:e.target.checked});return}const fm=e.target.id;if(fm=="fl"||fm=="fv"||fm=="fs"){if(fm=="fl")fLen=e.target.value;else if(fm=="fv")fLvl=e.target.value;else fSt=e.target.value;render();return}const f=e.target.files?.[0];const kind=e.target.id;if(!f||(kind!="pf"&&kind!="bf"))return;const im=new Image();
+ im.onload=async()=>{const W=kind=="pf"?128:900,H=kind=="pf"?128:225,c=document.createElement("canvas");c.width=W;c.height=H;const sc=Math.max(W/im.width,H/im.height),w=im.width*sc,h=im.height*sc;c.getContext("2d").drawImage(im,(W-w)/2,(H-h)/2,w,h);
+  toast("Checking picture...");const bad=await screenImg(c);if(bad)return toast(bad);saveMe(kind=="pf"?{pfp:c.toDataURL("image/jpeg",.8)}:{banner:c.toDataURL("image/jpeg",.72)});toast(kind=="pf"?"Photo updated":"Banner updated")};im.src=URL.createObjectURL(f)});
+document.addEventListener("submit",async e=>{lastAct=Date.now();e.preventDefault();const id=e.target.id,g=i=>document.getElementById(i),v=i=>g(i).value.trim();
  try{
  if(id=="authF"){const er=g("err");er.textContent="";
   try{if(mode=="up"){const un=v("un").toLowerCase();
@@ -649,7 +696,7 @@ document.addEventListener("submit",async e=>{e.preventDefault();const id=e.targe
  if(id=="poF"&&v("pt")){const bd=blocked(v("pt"));if(bd)return toast(bd);await addDoc(collection(db,"posts"),{uid:user.uid,text:v("pt"),at:Date.now(),parent:""});g("pt").value=""}
  if(id=="rpF"&&v("rt")){const bd=blocked(v("rt"));if(bd)return toast(bd);await addDoc(collection(db,"posts"),{uid:user.uid,text:v("rt"),at:Date.now(),parent:openPost});{const pp=posts.find(x=>x.id==openPost);if(pp)notify(pp.uid,"reply",(me().name||"Someone")+" replied: "+v("rt").slice(0,40))}g("rt").value=""}
  if(id=="gpF"){const mem=[user.uid,...friendsList().filter(u=>g("gf"+u.id)?.checked).map(u=>u.id)];const r=await addDoc(collection(db,"groups"),{name:v("gn"),owner:user.uid,members:mem,at:Date.now()});gid=r.id;mem.filter(x=>x!=user.uid).forEach(x=>notify(x,"group",(me().name||"Someone")+" added you to the group "+v("gn"),{gid:r.id}));modal=null;view="chat";render()}
- if(id=="mgF"&&v("mt")){const bd=blocked(v("mt"));if(bd)return toast(bd);await addDoc(collection(db,"msgs"),{gid,uid:user.uid,text:v("mt"),at:Date.now()});{const gg=groups.find(x=>x.id==gid);(gg?.members||[]).filter(x=>x!=user.uid).forEach(x=>notify(x,"msg",(me().name||"Someone")+": "+v("mt").slice(0,40),{id:"msg_"+gid+"_"+x,gid}))}g("mt").value=""}
+ if(id=="mgF"&&v("mt")){const bd=blocked(v("mt"));if(bd)return toast(bd);{const g0=groups.find(x=>x.id==gid);if(g0?.dm&&g0.members.some(x=>x!=user.uid&&(isBlocked(x)||blockedMe(x))))return toast("You can't message this person.")}await addDoc(collection(db,"msgs"),{gid,uid:user.uid,text:v("mt"),at:Date.now()});{const gg=groups.find(x=>x.id==gid);(gg?.members||[]).filter(x=>x!=user.uid).forEach(x=>notify(x,"msg",(me().name||"Someone")+": "+v("mt").slice(0,40),{id:"msg_"+gid+"_"+x,gid}))}g("mt").value=""}
  if(id=="crF"&&v("cr")){await addDoc(collection(db,"credits"),{uid:e.target.dataset.u,text:v("cr"),at:Date.now()});g("cr").value=""}
  if(id=="emF"){const er=g("aerr");er.textContent="";try{await reauthenticateWithCredential(auth.currentUser,EmailAuthProvider.credential(user.email,g("cp").value));await verifyBeforeUpdateEmail(auth.currentUser,v("ne"));modal=null;toast("Check your new inbox to confirm");render()}catch(x){er.textContent=(x.code=="auth/invalid-credential"||x.code=="auth/wrong-password")?"Password is wrong.":"Could not change the email. Try again."}}
  if(id=="dlF"){const er=g("aerr");er.textContent="";if(v("dt")!="DELETE")return er.textContent="Type DELETE to confirm.";
@@ -657,6 +704,10 @@ document.addEventListener("submit",async e=>{e.preventDefault();const id=e.targe
    for(const f of friends.filter(f=>f.a==uid||f.b==uid))await deleteDoc(doc(db,"friends",f.id));for(const q of posts.filter(q=>q.uid==uid))await deleteDoc(doc(db,"posts",q.id));for(const n of notifs)await deleteDoc(doc(db,"notifs",n.id));
    if(un)await deleteDoc(doc(db,"usernames",un));await deleteDoc(doc(db,"private",uid)).catch(()=>{});await deleteDoc(doc(db,"users",uid));await deleteUser(auth.currentUser);modal=null}
   catch(x){er.textContent=(x.code=="auth/invalid-credential"||x.code=="auth/wrong-password")?"Password is wrong.":"Could not delete the account. Try again."}}
+ if(id=="rpt"){const[k,tid]=repT.split(":"),it=k=="post"?posts.find(x=>x.id==tid):k=="msg"?msgs.find(x=>x.id==tid):users.find(x=>x.id==tid);
+  await addDoc(collection(db,"reports"),{kind:k,tid,au:k=="profile"?tid:(it?.uid||""),text:(k=="profile"?(it?.name||"profile"):(it?.text||"")).slice(0,300),reason:g("rr").value,details:v("rd").slice(0,500),by:user.uid,at:Date.now()});
+  notify(ADMIN_UID,"report","New report: "+g("rr").value,{id:"rep_"+Date.now()});modal=null;toast("Report sent to the owner");render()}
+ if(id=="gcF"){const n=Math.floor(+g("gc").value);if(!(n>0))return toast("Enter a number of coins");await setDoc(doc(db,"users",e.target.dataset.u),{coins:increment(n)},{merge:true});notify(e.target.dataset.u,"gift","The owner gave you "+n+" coins");g("gc").value="";toast("Gave "+n+" coins")}
  if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value,about:g("sa").value});modal=null;toast("Saved");render()}
  if(id=="edF"){readEdit();const{id:eid,...d}=edit;d.order=+d.order||0;d.mins=+d.mins||5;d.lessons=d.lessons.filter(l=>l.t.trim());d.pass=+d.pass||70;
   d.quiz=(d.quiz||[]).map(x=>{const k=x.o.map((t,j)=>[t.trim(),j]).filter(z=>z[0]);return{q:x.q.trim(),o:k.map(z=>z[0]),a:Math.max(0,k.findIndex(z=>z[1]==x.a))}}).filter(x=>x.q&&x.o.length>=2);
@@ -665,4 +716,4 @@ document.addEventListener("submit",async e=>{e.preventDefault();const id=e.targe
  }catch(x){console.error(x);toast("Could not save. Check your rules.")}});
 </script>
 </body>
-</html>
+</html>v
