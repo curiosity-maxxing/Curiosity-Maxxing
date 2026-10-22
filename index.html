@@ -37,7 +37,7 @@ button,input,textarea,select{font:inherit;color:inherit}button{cursor:pointer}
 .les.cur{border-color:var(--brand)}
 .dot{flex:none;width:22px;height:22px;border:1px solid var(--line);display:grid;place-items:center;font:500 .72rem 'JetBrains Mono',monospace;border-radius:2px}
 .dot.y{background:var(--brand);color:var(--on);border-color:var(--brand)}
-.av{flex:none;border-radius:var(--radius);background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;object-fit:cover;font-family:'JetBrains Mono',monospace}
+.av{flex:none;border-radius:50%;background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;object-fit:cover;font-family:'JetBrains Mono',monospace}
 .cm{display:flex;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
 .chat{display:flex;flex-direction:column;gap:8px;overflow:auto;height:calc(100vh - 190px);min-height:240px;padding:12px 0}
 .bub{align-self:flex-start;max-width:78%;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:6px 11px}.bub.me{align-self:flex-end;background:var(--soft);border-color:var(--brand)}
@@ -63,6 +63,15 @@ textarea{min-height:80px;resize:vertical}
 .pc{color:var(--brand);text-shadow:0 0 3px var(--bg);line-height:1}
 textarea.code{font-family:'JetBrains Mono',monospace;font-size:.85rem;min-height:170px;white-space:pre;tab-size:4}
 pre.out{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:10px;margin:8px 0 0;font:.85rem 'JetBrains Mono',monospace;white-space:pre-wrap;min-height:44px}
+.top{justify-content:space-between;flex-wrap:nowrap}
+.burger{background:none;border:0;display:grid;gap:5px;padding:8px;cursor:pointer}.burger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px}
+.coinchip{display:inline-flex;gap:6px;align-items:center;background:var(--card);cursor:pointer;color:var(--ink)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:7}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(290px,85vw);background:var(--card);border-left:1px solid var(--line);z-index:8;padding:18px;display:flex;flex-direction:column;gap:2px;overflow:auto}
+.dl{background:none;border:0;text-align:left;padding:11px 8px;font-size:1rem;color:var(--ink);border-radius:var(--radius)}.dl:hover,.dl.on{background:var(--soft)}.hr{border:0;border-top:1px solid var(--line);margin:10px 0;width:100%}
+.item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:6px}.item p{margin:0;color:var(--muted);font-size:.9rem;flex:1}
+.pic{display:grid;place-items:center;background:var(--soft);border-radius:var(--radius);padding:14px;margin-bottom:4px}
+.price{display:inline-flex;gap:6px;align-items:center;font:500 1rem 'JetBrains Mono',monospace}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:var(--radius);font-size:.88rem;z-index:9}
 </style>
 </head>
@@ -82,6 +91,7 @@ const auth=getAuth(initializeApp(firebaseConfig)),db=getFirestore(auth.app);
 const TOPICS=["Coding","Politics","News","Chess","Writing","Science","History","Money"],LEVELS=["Beginner","Intermediate","Advanced"];
 const THEMES={Mono:["#ffffff","#0a0a0b","#131315","#ececec"],Paper:["#111111","#f3f3f4","#ffffff","#111111"],Pink:["#e07fa6","#fff5f9","#ffffff","#3a2230"],Blue:["#6c9bd8","#f3f8ff","#ffffff","#1d2f47"],Green:["#5db487","#f2fbf6","#ffffff","#1c3a2b"],Lilac:["#9a86e0","#f6f3ff","#ffffff","#2a2347"],Peach:["#e8956f","#fff6f1","#ffffff","#45291c"],Yellow:["#d4a83a","#fffbec","#ffffff","#43391a"],Teal:["#4fb8b0","#f0fbfa","#ffffff","#18393a"]};
 const COLORS=["Pink","Blue","Green","Lilac","Peach","Yellow","Teal"];
+let menu=false,hatch=null,credits=[];
 let qz={k:"",ans:{},sub:false};
 let ch=null,run={k:"",out:"",ok:null,busy:false};
 let user,courses=[],users=[],posts=[],groups=[],msgs=[],likes=[],friends=[],puid=null,pq="",site={},view="home",tab="feed",gid=null,openPost=null,cid=null,li=0,modal=null,edit=null,filter="For you",mode="login",picked=[],unsubs=[];
@@ -102,7 +112,7 @@ applyTheme();setInterval(()=>{if(themePick=="auto")applyTheme()},60000);
 const saveMe=p=>setDoc(doc(db,"users",user.uid),p,{merge:true});
 const key=(c,i)=>c+":"+i;
 const day=d=>{d=d||new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
-const streak=u=>{const s=new Set((u.log||[]).map(x=>x.split("|")[0]));let n=0,d=new Date();if(!s.has(day(d)))d.setDate(d.getDate()-1);while(s.has(day(d))){n++;d.setDate(d.getDate()-1)}return n};
+const streak=u=>{const s=new Set([...(u.log||[]).map(x=>x.split("|")[0]),...(u.frozen||[])]);let n=0,d=new Date();if(!s.has(day(d)))d.setDate(d.getDate()-1);while(s.has(day(d))){n++;d.setDate(d.getDate()-1)}return n};
 const age=b=>{const d=new Date(b),n=new Date();let a=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))a--;return a};
 const ago=t=>{const s=(Date.now()-t)/1000;return s<60?"now":s<3600?Math.floor(s/60)+"m":s<86400?Math.floor(s/3600)+"h":Math.floor(s/86400)+"d"};
 const hasQ=c=>(c.quiz||[]).length>0;
@@ -133,7 +143,7 @@ const quizBox=(c,passed)=>{const Q=c.quiz;if(qz.k!=c.id)qz={k:c.id,ans:{},sub:fa
  const need=Math.ceil(Q.length*(c.pass||70)/100),sc=Q.filter((x,i)=>qz.ans[i]===x.a).length,ok=qz.sub&&sc>=need;
  return`<h2>Final quiz</h2><p>Answer all ${Q.length} questions. You need ${need} correct to pass${passed?". You have already passed this quiz.":"."}</p>
  ${Q.map((x,i)=>`<fieldset style="border:1px solid var(--line);border-radius:var(--radius);margin:10px 0;padding:8px 14px"><legend style="padding:0 6px"><b>${i+1}. ${esc(x.q)}</b></legend>
- ${x.o.map((o,j)=>`<label style="display:block;padding:3px 0"><input type="radio" name="q${i}" data-a="pick" data-v="${i}:${j}" ${qz.ans[i]===j?"checked":""}> ${esc(o)}${qz.sub&&qz.ans[i]===j?(j===x.a?" (correct)":" (incorrect)"):""}</label>`).join("")}</fieldset>`).join("")}
+ ${(me().hints||0)>0&&!(qz.h&&qz.h[i])&&!qz.sub?`<button type="button" class="btn s" data-a="hint" data-v="${i}">Use a hint (${me().hints} left)</button>`:""}${x.o.map((o,j)=>(qz.h&&qz.h[i]||[]).includes(j)?"":`<label style="display:block;padding:3px 0"><input type="radio" name="q${i}" data-a="pick" data-v="${i}:${j}" ${qz.ans[i]===j?"checked":""}> ${esc(o)}${qz.sub&&qz.ans[i]===j?(j===x.a?" (correct)":" (incorrect)"):""}</label>`).join("")}</fieldset>`).join("")}
  ${qz.sub?`<p><b>Score: ${sc} of ${Q.length}.</b> ${ok?"You passed.":"Not yet. Review the lessons and try again."}</p>`:""}
  <div class="row">${ok?"":`<button class="btn p" data-a="submitq" ${Object.keys(qz.ans).length<Q.length||qz.sub?"disabled":""}>Submit answers</button>`}${qz.sub&&!ok?`<button class="btn" data-a="retryq">Try again</button>`:""}</div>`};
 const cc=u=>courses.filter(c=>{const p=prog(c,u);return p.n&&p.d==p.n}).length;
@@ -142,23 +152,49 @@ const frState=id=>isFriend(id)?"Friends":fr(user.uid,id)?"Requested":fr(id,user.
 const friendsList=()=>users.filter(u=>u.id!=user.uid&&u.name&&isFriend(u.id));
 const unOk=u=>/^[a-z0-9_]{3,20}$/.test(u);
 const ITEMS=[["Scholar",50],["Night owl",75],["Bookworm",100],["Streak keeper",150],["Chess master",200],["Legend",400]];
-const av=(u,s)=>u?.pfp?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u?.name||"?")[0]||"?").toUpperCase()}</div>`;
+const coin=s=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true" style="vertical-align:middle"><circle cx="12" cy="12" r="11" fill="#f6c945" stroke="#c99a12" stroke-width="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#c99a12" stroke-width="1.2"/><path d="M12 7.5l1.4 3 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z" fill="#fff3b0"/></svg>`;
+const PETS={Kitty:{r:"common",b:"#f4c9a0",e:"cat",c:"#f2a1b3"},Bunny:{r:"common",b:"#f7f1f4",e:"bunny",c:"#f4b8c8"},Chick:{r:"common",b:"#ffe27a",e:"tuft",c:"#ff9f43"},
+ Fox:{r:"rare",b:"#f28c3c",e:"fox",c:"#ffffff"},Panda:{r:"rare",b:"#ffffff",e:"panda",c:"#2b2b33"},Owl:{r:"rare",b:"#b39880",e:"owl",c:"#f5e6c8"},
+ Dragon:{r:"legendary",b:"#6fd08c",e:"dragon",c:"#c8f2d4"},Unicorn:{r:"legendary",b:"#ffffff",e:"unicorn",c:"#ff8fc7"}};
+const petSvg=(n,s)=>{const p=PETS[n]||PETS.Kitty,B=p.b,C=p.c,st='stroke="rgba(0,0,0,.14)" stroke-width="1.5"';let back="",top="",post="";
+ const spark='<path d="M84 18l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#ffd166"/><path d="M14 22l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="#ffd166"/>';
+ if(p.e=="cat")back=`<path d="M20 40L24 12L46 30Z" fill="${B}" ${st}/><path d="M80 40L76 12L54 30Z" fill="${B}" ${st}/><path d="M26 34L27 20L38 30Z" fill="${C}"/><path d="M74 34L73 20L62 30Z" fill="${C}"/>`,post='<path d="M46 62l4 3 4-3z" fill="#e58aa0"/>';
+ if(p.e=="bunny")back=`<ellipse cx="35" cy="24" rx="9" ry="22" fill="${B}" ${st}/><ellipse cx="65" cy="24" rx="9" ry="22" fill="${B}" ${st}/><ellipse cx="35" cy="26" rx="4.5" ry="15" fill="${C}"/><ellipse cx="65" cy="26" rx="4.5" ry="15" fill="${C}"/>`,post=`<ellipse cx="50" cy="62" rx="3.2" ry="2.4" fill="${C}"/>`;
+ if(p.e=="tuft")top=`<path d="M44 30q-2-12 6-14q-1 8 6 8q-2-8 6-10q-2 10-6 16z" fill="${B}" ${st}/>`,post=`<path d="M44 62l6 6 6-6z" fill="${C}"/>`;
+ if(p.e=="fox")back=`<path d="M18 42L22 10L48 30Z" fill="${B}" ${st}/><path d="M82 42L78 10L52 30Z" fill="${B}" ${st}/><path d="M24 34L25 18L38 30Z" fill="#4a2a18"/><path d="M76 34L75 18L62 30Z" fill="#4a2a18"/>`,top=`<path d="M17 66Q32 82 50 72Q68 82 83 66Q68 60 50 64Q32 60 17 66Z" fill="#fff"/>`,post='<ellipse cx="50" cy="63" rx="3.5" ry="2.6" fill="#3a2330"/>';
+ if(p.e=="panda")back=`<circle cx="25" cy="30" r="11" fill="#2b2b33"/><circle cx="75" cy="30" r="11" fill="#2b2b33"/>`,top=`<ellipse cx="38" cy="56" rx="8.5" ry="10.5" fill="#2b2b33" transform="rotate(20 38 56)"/><ellipse cx="62" cy="56" rx="8.5" ry="10.5" fill="#2b2b33" transform="rotate(-20 62 56)"/>`,post='<ellipse cx="50" cy="62" rx="3.6" ry="2.6" fill="#2b2b33"/>';
+ if(p.e=="owl")back=`<path d="M22 40L26 14L44 32Z" fill="${B}" ${st}/><path d="M78 40L74 14L56 32Z" fill="${B}" ${st}/>`,top=`<circle cx="38" cy="56" r="12" fill="#fff"/><circle cx="62" cy="56" r="12" fill="#fff"/><ellipse cx="50" cy="76" rx="16" ry="10" fill="${C}"/>`,post='<path d="M45 62l5 7 5-7z" fill="#f5a623"/>';
+ if(p.e=="dragon")back=`<path d="M18 62Q0 44 12 28Q18 44 30 52Z" fill="#4fb878" ${st}/><path d="M82 62Q100 44 88 28Q82 44 70 52Z" fill="#4fb878" ${st}/><path d="M30 34L22 12L42 28Z" fill="#ffd166"/><path d="M70 34L78 12L58 28Z" fill="#ffd166"/>`+spark,top=`<ellipse cx="50" cy="76" rx="18" ry="11" fill="${C}"/><path d="M42 30l4-8 4 8 4-8 4 8z" fill="#ffd166"/>`,post='<circle cx="46" cy="62" r="1.4" fill="#2b5a3a"/><circle cx="54" cy="62" r="1.4" fill="#2b5a3a"/>';
+ if(p.e=="unicorn")back=`<path d="M24 34Q6 50 18 74" stroke="#ff8fc7" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M28 34Q12 48 22 70" stroke="#8fd3ff" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M32 36Q20 48 28 64" stroke="#c9a7ff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M30 36L30 20L42 30Z" fill="${B}" ${st}/><path d="M70 36L70 20L58 30Z" fill="${B}" ${st}/>`+spark,top='<path d="M50 4L43 32L57 32Z" fill="#ffd166" stroke="#e0a92f" stroke-width="1.2"/>',post=`<ellipse cx="50" cy="62" rx="3" ry="2.2" fill="${C}"/>`;
+ return`<svg viewBox="0 0 100 100" width="${s}" height="${s}" role="img" aria-label="${n}">${back}<ellipse cx="50" cy="60" rx="34" ry="30" fill="${B}" ${st}/>${top}<circle cx="38" cy="56" r="5.2" fill="#2b2233"/><circle cx="62" cy="56" r="5.2" fill="#2b2233"/><circle cx="40" cy="54" r="2" fill="#fff"/><circle cx="64" cy="54" r="2" fill="#fff"/><ellipse cx="29" cy="66" rx="5" ry="3.2" fill="#ff9db1" opacity=".75"/><ellipse cx="71" cy="66" rx="5" ry="3.2" fill="#ff9db1" opacity=".75"/><path d="M45 66q5 5 10 0" stroke="#2b2233" stroke-width="2" fill="none" stroke-linecap="round"/>${post}</svg>`};
+const eggSvg=(r,s)=>{const f={common:["#fff3df","#f0c99a"],rare:["#d6ecff","#7fb6ea"],legendary:["#ffe9a8","#c79bff"]}[r];
+ return`<svg viewBox="0 0 100 100" width="${s}" height="${s}" role="img" aria-label="${r} egg"><defs><linearGradient id="g${r}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${f[0]}"/><stop offset="1" stop-color="${f[1]}"/></linearGradient></defs><path d="M50 8C30 8 16 40 16 62c0 18 15 30 34 30s34-12 34-30C84 40 70 8 50 8z" fill="url(#g${r})" stroke="rgba(0,0,0,.14)" stroke-width="1.5"/><circle cx="38" cy="50" r="5" fill="${f[1]}" opacity=".6"/><circle cx="60" cy="40" r="4" fill="${f[1]}" opacity=".6"/><circle cx="56" cy="68" r="6" fill="${f[1]}" opacity=".6"/>${r=="legendary"?'<path d="M80 12l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#ffd166"/><path d="M18 30l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z" fill="#ffd166"/>':""}</svg>`};
+const hintSvg='<svg viewBox="0 0 100 100" width="92" height="92" role="img" aria-label="Hint"><circle cx="50" cy="42" r="26" fill="#ffe27a" stroke="#d9b13b" stroke-width="2"/><rect x="40" y="68" width="20" height="12" rx="3" fill="#cfd4db"/><rect x="43" y="82" width="14" height="6" rx="3" fill="#aab1bb"/><path d="M41 40q9 11 18 0" stroke="#d9b13b" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+const freezeSvg='<svg viewBox="0 0 100 100" width="92" height="92" role="img" aria-label="Streak freeze"><circle cx="50" cy="50" r="42" fill="#eaf5ff"/><g stroke="#6fb7ea" stroke-width="5" stroke-linecap="round"><path d="M50 16v68M21 33l58 34M21 67l58-34"/></g><circle cx="50" cy="50" r="8" fill="#d9efff" stroke="#6fb7ea" stroke-width="3"/></svg>';
+const SHOP=[{id:"hint",kind:"hint",name:"Hint",desc:"Removes two wrong answers on one quiz question.",price:25},{id:"freeze",kind:"freeze",name:"Streak freeze",desc:"Automatically saves your streak if you miss a day.",price:60},
+ {id:"egg1",kind:"egg",r:"common",name:"Common egg",desc:"Hatches a common pet: Kitty, Bunny or Chick.",price:80},{id:"egg2",kind:"egg",r:"rare",name:"Rare egg",desc:"Hatches a rare pet: Fox, Panda or Owl.",price:200},{id:"egg3",kind:"egg",r:"legendary",name:"Legendary egg",desc:"Hatches a Dragon or a Unicorn.",price:500}];
+function autoFreeze(){const m=me(),have=new Set([...(m.log||[]).map(x=>x.split("|")[0]),...(m.frozen||[])]),d1=new Date();d1.setDate(d1.getDate()-1);const d2=new Date(d1);d2.setDate(d2.getDate()-1);
+ if(!have.has(day())&&!have.has(day(d1))&&have.has(day(d2))&&(m.freezes||0)>0){saveMe({frozen:arrayUnion(day(d1)),freezes:increment(-1)});toast("A streak freeze saved your streak")}}
+const av=(u,s)=>u?.pfp?`<img class="av" style="width:${s}px;height:${s}px" src="${esc(u.pfp)}" alt="">`:u?.group?`<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px">${esc((u.name||"?")[0]).toUpperCase()}</div>`:`<div class="av" style="width:${s}px;height:${s}px;overflow:hidden"><svg viewBox="0 0 40 40" width="100%" height="100%" role="img" aria-label="Default profile picture"><rect width="40" height="40" fill="#cfd4db"/><circle cx="20" cy="15.5" r="7" fill="#fff"/><path d="M4 40c0-9.5 7-14.5 16-14.5S36 30.5 36 40z" fill="#fff"/></svg></div>`;
 
 /* ---------- data ---------- */
 onAuthStateChanged(auth,u=>{user=u;unsubs.forEach(f=>f());unsubs=[];
  if(u){const L=(q,fn)=>unsubs.push(onSnapshot(q,s=>{fn(s.docs.map(d=>({id:d.id,...d.data()})));render()},e=>console.error(e)));
-  L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);L(collection(db,"users"),x=>{users=x;if(!tsync&&me().name){tsync=1;if(me().themePick){themePick=me().themePick;applyTheme()}}});
+  L(query(collection(db,"courses"),orderBy("order","asc")),x=>courses=x);L(collection(db,"users"),x=>{users=x;if(!tsync&&me().name){tsync=1;if(me().themePick){themePick=me().themePick;applyTheme()}autoFreeze()}});
   L(query(collection(db,"posts"),orderBy("at","desc"),limit(200)),x=>posts=x);L(query(collection(db,"groups"),orderBy("at","desc")),x=>groups=x);
-  L(query(collection(db,"msgs"),orderBy("at","desc"),limit(300)),x=>msgs=x);L(collection(db,"likes"),x=>likes=x);L(collection(db,"friends"),x=>friends=x);
+  L(query(collection(db,"msgs"),orderBy("at","desc"),limit(300)),x=>msgs=x);L(collection(db,"likes"),x=>likes=x);L(collection(db,"friends"),x=>friends=x);L(collection(db,"credits"),x=>credits=x);
   unsubs.push(onSnapshot(doc(db,"settings","site"),s=>{site=s.data()||{};render()}));
  }else{courses=[];users=[];view="home";themePick="auto";tsync=0;applyTheme()}
  render()});
 
 /* ---------- views ---------- */
 const nm=()=>esc((site.name||"curiosity maxxing").toLowerCase());
-const nav=()=>`<header class="top"><div class="logo">${nm()}</div>
- <nav class="menu">${[["home","Courses"],["comm","Community"],["shop","Shop"],["me","Profile"],["set","Settings"]].map(([v,n])=>`<button class="${view==v||(v=="home"&&view=="course")||(v=="comm"&&view=="user")?"on":""}" data-a="go" data-v="${v}">${n}</button>`).join("")}</nav>
- <div class="row" style="gap:6px"><span class="chip">${streak(me())}d streak</span><span class="chip">${me().coins||0} coins</span>${isAdmin()?`<button class="btn s p" data-a="new">New course</button><button class="btn s" data-a="site">Site</button>`:""}</div></header>`;
+const nav=()=>`<header class="top"><div class="row" style="gap:10px"><button class="lnk" data-a="go" data-v="me" aria-label="Your profile">${av(me(),38)}</button><button class="btn coinchip" data-a="go" data-v="shop" aria-label="Coins. Open the shop">${coin(18)} <b>${me().coins||0}</b></button></div>
+ <button class="lnk logo" data-a="go" data-v="home" style="margin:0">${nm()}</button>
+ <button class="burger" data-a="menu" aria-label="Open menu" aria-expanded="${menu}"><span></span><span></span><span></span></button></header>${menu?drawer():""}`;
+const drawer=()=>`<div class="scrim" data-a="menu"></div><aside class="drawer" role="dialog" aria-label="Menu"><div class="row" style="margin-bottom:8px"><b>Menu</b><button class="btn s sp" data-a="menu">Close</button></div>
+ ${[["home","Courses"],["comm","Community"],["shop","Shop"],["me","Profile"],["fame","Hall of fame"],["set","Settings"],["about","About the website"]].map(([v,n])=>`<button class="dl ${view==v?"on":""}" data-a="go" data-v="${v}">${n}</button>`).join("")}
+ ${isAdmin()?`<hr class="hr"><button class="dl" data-a="new">New course</button><button class="dl" data-a="site">Site settings</button>`:""}</aside>`;
 
 const authView=()=>{const s=mode=="up";return`<div class="land"><div class="logo">${nm()}</div><h1>Learn one small thing at a time.</h1><p>Short courses on code, politics, chess and more. Build a streak, earn coins, make friends and learn together.</p></div>
  <div class="auth box"><h2>${s?"Create your account":"Log in"}</h2><form id="authF" style="margin-top:14px">
@@ -207,7 +243,7 @@ const feed=()=>`<form id="poF" class="box"><textarea id="pt" maxlength="500" pla
 
 function chats(){const gs=groups.filter(g=>(g.members||[]).includes(user.uid)).map(g=>({g,m:msgs.find(m=>m.gid==g.id)})).sort((a,b)=>(b.m?.at||b.g.at)-(a.m?.at||a.g.at));
  return`<div class="row" style="margin:12px 0"><button class="btn p" data-a="newgroup">New group</button></div>
- ${gs.map(({g,m})=>{const u=m&&users.find(x=>x.id==m.uid);return`<button class="les" data-a="chat" data-v="${g.id}">${av({name:g.name},40)}<span style="flex:1;min-width:0"><b>${esc(g.name)}</b><br><span class="k">${m?esc((u?.name||"user")+": "+m.text.slice(0,50)):"No messages yet"}</span></span><span class="k">${m?ago(m.at):""}</span></button>`}).join("")||'<p class="k">No chats yet. Make friends, then create a group.</p>'}`}
+ ${gs.map(({g,m})=>{const u=m&&users.find(x=>x.id==m.uid);return`<button class="les" data-a="chat" data-v="${g.id}">${av({name:g.name,group:1},40)}<span style="flex:1;min-width:0"><b>${esc(g.name)}</b><br><span class="k">${m?esc((u?.name||"user")+": "+m.text.slice(0,50)):"No messages yet"}</span></span><span class="k">${m?ago(m.at):""}</span></button>`}).join("")||'<p class="k">No chats yet. Make friends, then create a group.</p>'}`}
 
 function people(){const q=pq.toLowerCase(),list=users.filter(u=>u.id!=user.uid&&u.name&&(!q||(u.name+" "+(u.username||"")).toLowerCase().includes(q))).sort((a,b)=>isFriend(b.id)-isFriend(a.id)).slice(0,30);
  return`<div class="f" style="margin-top:12px"><label for="pq">Find people by name or username</label><input id="pq" value="${esc(pq)}" autocomplete="off"></div>
@@ -216,7 +252,7 @@ function people(){const q=pq.toLowerCase(),list=users.filter(u=>u.id!=user.uid&&
 const comm=()=>`<div class="row">${[["feed","Feed"],["chats","Chats"],["people","People"]].map(([t,n])=>`<button class="btn ${t==tab?"on":""}" data-a="tab" data-v="${t}">${n}</button>`).join("")}</div>`+({feed,chats,people}[tab]||feed)();
 
 function chatView(){const g=groups.find(x=>x.id==gid);if(!g)return`<button class="btn" data-a="go" data-v="comm">Back</button>`;const ms=msgs.filter(m=>m.gid==gid).reverse();
- return`<div class="chathead"><button class="btn s" data-a="go" data-v="comm">Back</button>${av({name:g.name},34)}<div style="flex:1;min-width:0"><b>${esc(g.name)}</b><div class="k">${(g.members||[]).length} members</div></div><button class="btn s" data-a="members">Members</button></div>
+ return`<div class="chathead"><button class="btn s" data-a="go" data-v="comm">Back</button>${av({name:g.name,group:1},34)}<div style="flex:1;min-width:0"><b>${esc(g.name)}</b><div class="k">${(g.members||[]).length} members</div></div><button class="btn s" data-a="members">Members</button></div>
  <div class="chat">${ms.map(m=>{const mine=m.uid==user.uid,u=users.find(x=>x.id==m.uid);return`<div class="bub ${mine?"me":""}">${mine?"":`<button class="lnk k" data-a="user" data-v="${m.uid}">${esc(u?.name||"user")}</button>`}<div>${esc(m.text)}</div><span class="k">${ago(m.at)}</span></div>`}).join("")||'<p class="k" style="text-align:center">Say hello.</p>'}</div>
  <form id="mgF" class="cbar row"><input id="mt" maxlength="500" placeholder="Message" style="flex:1" autocomplete="off"><button class="btn p">Send</button></form>`}
 
@@ -233,14 +269,33 @@ const newGroupModal=()=>`<div class="modal"><div class="sheet"><div class="row">
 const addToGroup=id=>{if(!isFriend(id))return`<p class="k">Become friends to add them to a group.</p>`;const gs=groups.filter(g=>(g.owner==user.uid||isAdmin())&&!(g.members||[]).includes(id));
  return gs.length?`<div class="box row"><span>Add to a group</span><select id="atg" style="flex:1;max-width:260px">${gs.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join("")}</select><button class="btn p" data-a="addtog" data-v="${id}">Add</button></div>`:""};
 
-function profileOf(id){const self=id==user.uid,u=self?me():users.find(x=>x.id==id);if(!u)return'<p class="k">User not found.</p>';
+function profileOf(id){const self=id==user.uid,u=self?me():users.find(x=>x.id==id);if(!u)return'<p class="k">User not found.</p>';const cr=credits.filter(c=>c.uid==id),pets=u.pets||[];
  return`${self?"":`<div class="row"><button class="btn" data-a="go" data-v="comm">Back</button></div>`}
- <div class="box"><div class="row" style="align-items:flex-start">${av(u,88)}<div style="flex:1"><h1>${esc(u.name)}</h1><div class="k">${u.username?"@"+esc(u.username)+" / ":""}${esc(u.pronouns||"no pronouns set")}${u.title?" / "+esc(u.title):""}</div><p style="max-width:52ch;margin:8px 0 0">${esc(u.bio||"No bio yet.")}</p></div>
+ <div class="box"><div class="row" style="align-items:flex-start">${av(u,88)}<div style="flex:1;min-width:180px"><h1>${esc(u.name)}</h1><div class="k">${u.username?"@"+esc(u.username)+" / ":""}${esc(u.pronouns||"no pronouns set")}</div><p style="max-width:52ch;margin:8px 0 0">${esc(u.bio||"No bio yet.")}</p></div>
+ ${u.buddy?`<div style="text-align:center">${petSvg(u.buddy,76)}<div class="k">${esc(u.buddy)}</div></div>`:""}
  ${self?`<button class="btn" data-a="go" data-v="set">Edit profile</button>`:`<button class="btn ${isFriend(id)?"on":"p"}" data-a="friend" data-v="${id}">${frState(id)}</button>`}</div></div>
- <div class="tiles">${[[(u.done||[]).length,"lessons completed"],[cc(u),"courses completed"],[streak(u)+"d","day streak"],...(self?[[u.coins||0,"coins"]]:[])].map(([a,b])=>`<div class="tile"><b>${a}</b><span>${b}</span></div>`).join("")}</div>${self?"":addToGroup(id)}`}
+ <div class="tiles">${[[(u.done||[]).length,"lessons completed"],[cc(u),"courses completed"],[(u.passed||[]).length,"quizzes passed"],[streak(u)+"d","day streak"],[pets.length,"pets collected"]].map(([a,b])=>`<div class="tile"><b>${a}</b><span>${b}</span></div>`).join("")}</div>
+ ${pets.length?`<div class="box"><h3>Pets</h3><div class="row" style="gap:14px;margin-top:8px">${pets.map(n=>`<div style="text-align:center">${petSvg(n,64)}<div class="k">${n}</div></div>`).join("")}</div></div>`:""}
+ ${cr.length||isAdmin()?`<div class="box"><h3>Contributions</h3>${cr.length?`<ul>${cr.map(c=>`<li>${esc(c.text)}${isAdmin()?` <button class="btn s d" data-a="delcr" data-v="${c.id}">Remove</button>`:""}</li>`).join("")}</ul>`:'<p class="k">None yet.</p>'}
+ ${isAdmin()?`<form id="crF" data-u="${id}" class="row" style="margin-top:8px"><input id="cr" placeholder="e.g. Helped write the chess course" style="flex:1" maxlength="120" aria-label="Contribution"><button class="btn p">Add credit</button></form>`:""}</div>`:""}
+ ${self?"":addToGroup(id)}`}
 
-function shop(){const m=me(),own=m.owned||[];
- return`<h1>Shop</h1><p class="k">You have ${m.coins||0} coins. Earn more by finishing lessons and passing quizzes.</p><div class="grid" style="margin-top:14px">${ITEMS.map(([n,pr])=>`<div class="card"><span class="k">Profile title</span><h3>${n}</h3><p>Shows under your name on your profile.</p>${own.includes(n)?`<button class="btn ${m.title==n?"on":""}" data-a="equip" data-v="${n}">${m.title==n?"Equipped":"Equip"}</button>`:`<button class="btn p" data-a="buy" data-v="${n}" ${(m.coins||0)<pr?"disabled":""}>Buy for ${pr} coins</button>`}</div>`).join("")}</div>`}
+function shop(){const m=me(),own=m.pets||[],card=it=>`<div class="item"><div class="pic">${it.kind=="egg"?eggSvg(it.r,92):it.kind=="hint"?hintSvg:freezeSvg}</div><span class="k">${it.kind=="egg"?it.r+" egg":"supply"}</span><h3>${it.name}</h3><p>${it.desc}</p>
+  <div class="row"><span class="price">${coin(16)} ${it.price}</span><button class="btn p sp" data-a="buy" data-v="${it.id}" ${(m.coins||0)<it.price?"disabled":""}>Buy</button></div></div>`;
+ return`<div class="row"><div><h1>Shop</h1><span class="k">Earn coins from lessons and quizzes, then spend them here.</span></div><span class="chip sp">${m.hints||0} hints / ${m.freezes||0} freezes</span></div>
+ <h3 style="margin:22px 0 10px">Supplies</h3><div class="grid">${SHOP.filter(i=>i.kind!="egg").map(card).join("")}</div>
+ <h3 style="margin:22px 0 4px">Eggs</h3><p class="k" style="margin:0 0 10px">Every egg hatches a pet. A duplicate gives 40% of the price back.</p><div class="grid">${SHOP.filter(i=>i.kind=="egg").map(card).join("")}</div>
+ <h3 style="margin:22px 0 10px">Your pet collection (${own.length} of ${Object.keys(PETS).length})</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${Object.keys(PETS).map(n=>own.includes(n)?`<div class="item" style="align-items:center;text-align:center"><div class="pic">${petSvg(n,90)}</div><b>${n}</b><span class="k">${PETS[n].r}</span><button class="btn s ${m.buddy==n?"on":""}" data-a="buddy" data-v="${n}">${m.buddy==n?"Buddy":"Make buddy"}</button></div>`:`<div class="item" style="align-items:center;text-align:center"><div class="pic" style="filter:grayscale(1) brightness(.5);opacity:.5">${petSvg(n,90)}</div><b>???</b><span class="k">${PETS[n].r}</span></div>`).join("")}</div>`}
+
+function fame(){const by={};credits.forEach(c=>(by[c.uid]=by[c.uid]||[]).push(c));
+ return`<h1>Hall of fame</h1><p class="k">People who helped build the courses.</p>${Object.keys(by).map(id=>{const u=users.find(x=>x.id==id);return`<div class="box"><div class="row">${avBtn(u,id,44)}<div>${nmBtn(u,id)}<div class="k">${by[id].length} contribution${by[id].length>1?"s":""}</div></div></div><ul>${by[id].map(c=>`<li>${esc(c.text)}</li>`).join("")}</ul></div>`}).join("")||'<p class="k" style="margin-top:14px">No one here yet.</p>'}`}
+
+const about=()=>`<h1>About ${nm()}</h1><div class="box"><p>${esc(site.about||"Curiosity maxxing is a place to learn one small thing at a time. Short courses, quizzes and challenges help you build real knowledge, and a friendly community keeps you coming back.")}</p>
+ <h3 style="margin:16px 0 6px">How it works</h3><ul><li>Finish lessons in order to unlock the next one</li><li>Pass each course's final quiz to complete it</li><li>Earn coins and keep a daily streak</li><li>Spend coins in the shop on hints, streak freezes and eggs that hatch pets</li><li>Add friends, chat in groups and post in the community</li></ul>
+ <h3 style="margin:16px 0 6px">Got an idea?</h3><p><a class="btn p" href="${esc(site.formUrl||FORM_URL)}" target="_blank" rel="noopener" style="text-decoration:none">Suggest a course</a></p></div>`;
+
+const hatchModal=()=>`<div class="modal"><div class="sheet" style="text-align:center;max-width:380px"><h2>${hatch.dup?"You already have this one":"A new pet hatched"}</h2><div style="margin:10px 0">${petSvg(hatch.pet,150)}</div><h3>${hatch.pet}</h3>
+ <p class="k">${PETS[hatch.pet].r}${hatch.dup?". You got "+hatch.back+" coins back.":""}</p><button class="btn p" data-a="closehatch">Nice</button></div></div>`;
 
 function settings(){const m=me();return`<div class="two"><div class="box"><h3>Profile</h3><div class="row" style="margin:12px 0">${av(m,64)}<div class="f" style="margin:0"><label for="pf">Profile photo</label><input id="pf" type="file" accept="image/*"></div></div>
  <form id="meF"><div class="f"><label for="pn">Name</label><input id="pn" value="${esc(m.name)}" maxlength="24"></div>
@@ -283,12 +338,12 @@ const siteModal=()=>`<div class="modal"><div class="sheet"><div class="row"><h2>
  <form id="stF" style="margin-top:12px"><div class="f"><label for="sn">Site name</label><input id="sn" value="${esc(site.name||"curiosity maxxing")}"></div>
  <div class="f"><label for="sg">Homepage headline</label><input id="sg" value="${esc(site.tagline||"")}"></div>
  <div class="f"><label for="sb">Announcement banner (empty = hidden)</label><input id="sb" value="${esc(site.banner||"")}"></div>
- <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><div class="row"><button class="btn p">Save</button><button type="button" class="btn sp" data-a="seed">Add / refresh all starter courses</button></div></form></div></div>`;
+ <div class="f"><label for="sf">Google Form link</label><input id="sf" value="${esc(site.formUrl||"")}"></div><div class="f"><label for="sa">About page text</label><textarea id="sa">${esc(site.about||"")}</textarea></div><div class="row"><button class="btn p">Save</button><button type="button" class="btn sp" data-a="seed">Add / refresh all starter courses</button></div></form></div></div>`;
 
 function render(){const keep={};$$("#app [id]").forEach(el=>keep[el.id]=el.type=="checkbox"?el.checked:el.value);
  const fid=document.activeElement?.id,pos=document.activeElement?.selectionStart;
- const body=user?({home,course,comm,me:()=>profileOf(user.uid),user:()=>profileOf(puid),set:settings,shop,chat:chatView}[view]||home)():"";
- $("#app").innerHTML=!user?authView():(view=="chat"?"":nav())+body+(modal=="edit"?editor():modal=="site"?siteModal():modal=="members"?membersModal():modal=="newgroup"?newGroupModal():"");
+ const body=user?({home,course,comm,me:()=>profileOf(user.uid),user:()=>profileOf(puid),set:settings,shop,fame,about,chat:chatView}[view]||home)():"";
+ $("#app").innerHTML=!user?authView():(view=="chat"?"":nav())+body+(modal=="edit"?editor():modal=="site"?siteModal():modal=="members"?membersModal():modal=="newgroup"?newGroupModal():"")+(hatch?hatchModal():"");
  for(const id in keep){const el=document.getElementById(id);if(!el||["color","range","file"].includes(el.type))continue;if(el.type=="checkbox")el.checked=keep[id];else el.value=keep[id]}
  if(fid){const el=document.getElementById(fid);if(el){el.focus();try{el.setSelectionRange(pos,pos)}catch{}}}
  const cs=$(".chat");if(cs)cs.scrollTop=cs.scrollHeight}
@@ -326,19 +381,25 @@ const MORE=[
  mkT("Decisions and loops","Programs often need to choose and to repeat.\n## if and else\n> if (age >= 18) {\n>   console.log(\"adult\")\n> } else {\n>   console.log(\"minor\")\n> }\n## Comparing\n- === means equal to\n- !== means not equal to\n- > and < compare size\n## Loops\nA for loop repeats code a set number of times:\n> for (let i = 0; i < 3; i++) {\n>   console.log(i)\n> }\nThis prints 0, 1 and 2. Prefer === over == to avoid surprises.")],
  quiz:[mkQ("Which keyword makes a variable you can change later?",["const","let","def","static"],1),mkQ("What does console.log do?",["Deletes a variable","Shows a value in the console","Creates a function","Saves a file"],1),mkQ("Which of these is a boolean?",["\"true\"","true","1","yes"],1),mkQ("What does a for loop with i from 0 while i < 3 print?",["1 2 3","0 1 2","0 1 2 3","Nothing"],1),mkQ("Which operator checks that two values are equal?",["=","===","=>","!=="],1)]}];
 const A={
- go:v=>{view=v;modal=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
+ go:v=>{view=v;modal=null;menu=false;render()},menu:()=>{menu=!menu;render()},closehatch:()=>{hatch=null;render()},mode:()=>{mode=mode=="up"?"in":"up";render()},cat:v=>{filter=v;render()},tab:v=>{tab=v;render()},
  topic:v=>{picked=picked.includes(v)?picked.filter(x=>x!=v):[...picked,v];render()},
  open:v=>{const c=courses.find(x=>x.id==v);cid=v;view="course";qz={k:"",ans:{},sub:false};{const dd=me().done||[],L=c.lessons||[],k=L.findIndex((_,i)=>!dd.includes(key(v,i)));li=k<0?(hasQ(c)&&!(me().passed||[]).includes(v)?L.length:0):k}saveMe({w:{[c.category||"General"]:increment(1)}});render();scrollTo(0,0)},
- les:v=>{const c=courses.find(x=>x.id==cid);v=+v;if(v<0)return;if(locked(c,v))return toast("Finish the earlier steps first");li=v;qz={k:"",ans:{},sub:false};render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";render()},
- new:()=>{edit=blank();modal="edit";render()},
+ les:v=>{const c=courses.find(x=>x.id==cid);v=+v;if(v<0)return;if(locked(c,v))return toast("Finish the earlier steps first");li=v;qz={k:"",ans:{},sub:false};render()},out:()=>signOut(auth),x:()=>{modal=null;render()},site:()=>{modal="site";menu=false;render()},
+ new:()=>{edit=blank();modal="edit";menu=false;render()},
  edit:v=>{const c=courses.find(x=>x.id==v);edit={...blank(),...c,lessons:(c.lessons||[]).map(l=>({...bl(),...l})),quiz:(c.quiz||[]).map(x=>({q:x.q,o:[...x.o],a:x.a})),pass:c.pass||70};modal="edit";render()},
  user:v=>{puid=v;view=v==user.uid?"me":"user";modal=null;render();scrollTo(0,0)},
  friend:v=>{const id=user.uid+"_"+v;fr(user.uid,v)?deleteDoc(doc(db,"friends",id)):setDoc(doc(db,"friends",id),{a:user.uid,b:v})},
  chat:v=>{gid=v;view="chat";render()},newgroup:()=>{modal="newgroup";render()},members:()=>{modal="members";render()},
  addmember:async()=>{await setDoc(doc(db,"groups",gid),{members:arrayUnion(document.getElementById("addm").value)},{merge:true});toast("Added")},
  addtog:async v=>{await setDoc(doc(db,"groups",document.getElementById("atg").value),{members:arrayUnion(v)},{merge:true});toast("Added to group")},
- buy:v=>{const it=ITEMS.find(x=>x[0]==v),m=me();if((m.coins||0)<it[1]||(m.owned||[]).includes(v))return;saveMe({coins:increment(-it[1]),owned:arrayUnion(v),title:v});toast("Bought "+v)},
- equip:v=>saveMe({title:me().title==v?"":v}),
+ buy:v=>{const it=SHOP.find(x=>x.id==v),m=me();if((m.coins||0)<it.price)return toast("Not enough coins");
+  if(it.kind=="hint"){saveMe({coins:increment(-it.price),hints:increment(1)});toast("Hint added")}
+  else if(it.kind=="freeze"){saveMe({coins:increment(-it.price),freezes:increment(1)});toast("Streak freeze added")}
+  else{const pool=Object.keys(PETS).filter(n=>PETS[n].r==it.r),pet=pool[Math.floor(Math.random()*pool.length)],dup=(m.pets||[]).includes(pet),back=Math.round(it.price*.4);
+   saveMe({coins:increment(-it.price+(dup?back:0)),...(dup?{}:{pets:arrayUnion(pet),...(m.buddy?{}:{buddy:pet})})});hatch={pet,dup,back};render()}},
+ buddy:v=>saveMe({buddy:v}),delcr:v=>deleteDoc(doc(db,"credits",v)),
+ hint:v=>{v=+v;const x=courses.find(c=>c.id==cid).quiz[v];if((me().hints||0)<1)return;const wrong=x.o.map((_,j)=>j).filter(j=>j!=x.a).sort(()=>Math.random()-.5).slice(0,2);
+  qz.h=qz.h||{};qz.h[v]=wrong;if(wrong.includes(qz.ans[v]))delete qz.ans[v];saveMe({hints:increment(-1)});toast("Two wrong answers removed");render()},
  addq:()=>{readEdit();edit.quiz.push({q:"",o:["","","",""],a:0});render()},rmq:v=>{readEdit();edit.quiz.splice(+v,1);render()},
  pick:v=>{if(qz.sub)return;const[i,j]=v.split(":").map(Number);qz.ans[i]=j;render()},
  submitq:()=>{const c=courses.find(x=>x.id==cid),Q=c.quiz,sc=Q.filter((x,i)=>qz.ans[i]===x.a).length,need=Math.ceil(Q.length*(c.pass||70)/100);qz.sub=true;
@@ -415,7 +476,8 @@ document.addEventListener("submit",async e=>{e.preventDefault();const id=e.targe
  if(id=="rpF"&&v("rt")){await addDoc(collection(db,"posts"),{uid:user.uid,text:v("rt"),at:Date.now(),parent:openPost});g("rt").value=""}
  if(id=="gpF"){const mem=[user.uid,...friendsList().filter(u=>g("gf"+u.id)?.checked).map(u=>u.id)];const r=await addDoc(collection(db,"groups"),{name:v("gn"),owner:user.uid,members:mem,at:Date.now()});gid=r.id;modal=null;view="chat";render()}
  if(id=="mgF"&&v("mt")){await addDoc(collection(db,"msgs"),{gid,uid:user.uid,text:v("mt"),at:Date.now()});g("mt").value=""}
- if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value});modal=null;toast("Saved");render()}
+ if(id=="crF"&&v("cr")){await addDoc(collection(db,"credits"),{uid:e.target.dataset.u,text:v("cr"),at:Date.now()});g("cr").value=""}
+ if(id=="stF"){await setDoc(doc(db,"settings","site"),{name:g("sn").value,tagline:g("sg").value,banner:g("sb").value,formUrl:g("sf").value,about:g("sa").value});modal=null;toast("Saved");render()}
  if(id=="edF"){readEdit();const{id:eid,...d}=edit;d.order=+d.order||0;d.mins=+d.mins||5;d.lessons=d.lessons.filter(l=>l.t.trim());d.pass=+d.pass||70;
   d.quiz=(d.quiz||[]).map(x=>{const k=x.o.map((t,j)=>[t.trim(),j]).filter(z=>z[0]);return{q:x.q.trim(),o:k.map(z=>z[0]),a:Math.max(0,k.findIndex(z=>z[1]==x.a))}}).filter(x=>x.q&&x.o.length>=2);
   eid?await setDoc(doc(db,"courses",eid),d):await addDoc(collection(db,"courses"),d);modal=null;toast("Published for everyone");render()}
